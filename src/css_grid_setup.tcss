@@ -1,0 +1,164 @@
+Grid {
+	grid-size: 10 10;
+	/*grid-columns: 8fr 2fr;
+	grid-rows: 1fr, 8fr, 1 fr; */
+}
+
+
+/* #Topbar_top {
+    row-span: 1;
+	column-span: 10;
+    background: transparent;
+}*/
+
+#SettingsButton_topright {
+	column-span: 1;
+	row-span: 1;
+}
+
+
+#ContextDisplay_topbar {
+    row-span: 1;
+	column-span: 5;
+}
+
+#ModelDisplay_topbar {
+	column-span: 2;
+	row-span: 1;
+
+}
+
+#ChatHistorySelect_topright {
+	column-span: 2;
+	row-span: 1;
+
+}
+
+#CurrentChant_MainChatWindow {
+	column-span: 8;
+	row-span: 8;
+	padding: 3;
+    background: rgb(2, 1, 21);
+}
+
+
+#ChatHistoryDisplay_sidebar {
+	padding: 3;
+	column-span: 2;
+	row-span: 8;
+    color:rgb(251, 251, 251);
+    background: transparent;
+}
+
+
+
+#QuestionAsk_bottombar {
+    row-span: 1;
+	column-span: 8;
+    color:rgb(253, 254, 255);
+    background: transparent;
+}
+#filepath {
+    row-span: 1;
+	column-span: 1;
+}
+#export {
+    row-span: 1;
+	column-span: 1;
+}
+
+
+/*
+#SubmitQuestion {
+    row-span: 1;
+	column-span: 1;
+    color:rgb(253, 254, 255);
+    border: round rgb(245, 245, 245);
+    background: rgb(20, 187, 109); 
+}
+#question_text {
+    row-span: 1;
+	column-span: 6;
+    color:rgb(253, 254, 255);
+    background: transparent;
+}
+.cssexitmessage {
+    color:rgb(253, 237, 6);
+    background: rgb(0, 94, 255); t;
+}
+
+QuitScreen {
+    align: center middle;
+}
+
+#cssexitmessage {
+    padding: 0 1;
+    width: 60;
+    height: 11;
+    border: thick $background 80%;
+    background: $surface;
+}
+
+*/
+.cssexportbutton {
+    row-span: 1;
+	column-span: 1;
+    color:rgb(253, 254, 255);
+    background: transparent;
+
+}
+
+.cssquestion_text {
+    row-span: 1;
+	column-span: 6;
+    color:rgb(253, 254, 255);
+    background: transparent;
+}
+
+.csssubmitbutton {
+    row-span: 1;
+	column-span: 1;
+    color:rgb(253, 254, 255);
+    background: transparent;
+
+}
+.cssquestion {
+    padding: 0 0;
+    offset: 15 0;
+    background: $panel;
+    text-align: right;
+    align: right top;
+    border: round rgb(0, 98, 255);
+    content-align-horizontal: right;
+    color:rgb(247, 247, 250);
+    background: transparent;
+    /*background:rgb(0, 25, 92);*/
+}
+
+.cssanswer {
+    background: $panel;
+    padding: 1 1;
+    align: left top;
+    border: round rgb(91, 33, 173);
+    content-align-horizontal: right;
+    color:rgb(247, 247, 250);
+    background: transparent;
+    /*background:rgb(0, 25, 92);*/
+}
+
+.cssdate {
+	column-span:6;
+    opacity: 75%;
+    background: $panel;
+    text-align: center;
+    align: center top;
+    border: round rgb(221, 255, 0);
+    content-align-horizontal: right;
+    color:rgb(221, 255, 0);
+    background:rgb(29, 53, 0);
+}
+
+.notifyloading {
+    color:rgb(247, 247, 250);
+    background: transparent;
+}

@@ -1,0 +1,29 @@
+[project]
+name = "my_llama_cli"
+version = "0.1.0"
+description = "A CLI application that interfaces with ollama and allows you to store and acces chats"
+readme = "README.md"
+authors = [{ name = "Andrew Cole", email = "376180+andrewscole@users.noreply.github.com" }]
+
+requires-python = "==3.13.*"
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "peewee",
+    "requests",
+    "click",
+    "mypy"
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "pytest",
+    "pytest-cov", 
+    "flake8"
+]
