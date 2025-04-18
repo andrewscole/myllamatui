@@ -17,6 +17,7 @@ from textual.widgets import (
     Markdown,
     Select,
     Static,
+    TextArea,
     Tree,
 )
 
@@ -166,6 +167,9 @@ class OllamaTermApp(App):
         """Create and mount widgets for chat"""
         qwidget = Markdown(question, classes="cssquestion")
         amarkdown = Markdown(answer, classes="cssanswer")
+        # I think the trick here is going to be to split the text and have markdown for the text and then
+        # use text area for the code. I probably want to create a virtical that governs this and call it here.
+        #amarkdown = TextArea(answer, classes="cssanswer", language="markdown")
 
         if chatdate is not None and chatdate != previouschatdate:
             qdate = Static(chatdate, classes="cssdate")

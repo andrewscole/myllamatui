@@ -2,12 +2,11 @@ import logging
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import HorizontalGroup, Vertical
+from textual.containers import HorizontalGroup
 from textual.reactive import reactive
 from textual.screen import Screen, ModalScreen
 from textual.widgets import (
     Button,
-    ContentSwitcher,
     DataTable,
     DirectoryTree,
     Input,
@@ -16,6 +15,8 @@ from textual.widgets import (
     RadioButton,
     Select,
     Static,
+    TabbedContent,
+    TabPane,
 )
 
 from myllamacli.db_models import LLM_MODEL, Chat
@@ -27,32 +28,24 @@ from myllamacli.chats import parse_export_path
 class SettingsScreen(Screen):
     updated_url = reactive("")
 
+    # might not need this
+    #def __init__(self):
+    #    super().__init__()
+    #    self.close_message = ""
+
     def compose(self) -> ComposeResult:
 
         yield Static("\n")
-        # yield Static("Click to Close Settings Window")
         yield Button("Close Settings Window", id="CloseSetting", variant="primary")
         yield Static("\n")
-        yield Label("Choose settings to edit:")
-        yield Select(
-            iter(
-                (switch_choice, switch_choice)
-                for switch_choice in [
-                    "Edit URL",
-                    "Edit Contexts",
-                    "Edit Topics",
-                    "Edit Models",
-                ]
-            ),
-            prompt="Select setting to edit.",
-            id="SettingsSelector",
-        )
-        yield Static("\n")
 
-        # try adding a content switcher
-        with ContentSwitcher(initial="URL", id="content_switcher_settings"):
-            with Vertical(id="EditURL"):
+        yield Label("Choose settings to edit:")
+        yield Static("\n")
+        with TabbedContent():
+            with TabPane("Edit URL", id="EditURL"):
                 # set url
+                yield Static("\n\n")
+                
                 yield Label(f"Current URL: {self.updated_url}", id="CurrentUrl")
                 yield Button("UPDATE URL", id="UpdateUrl", variant="success")
                 yield Input(
@@ -60,9 +53,9 @@ class SettingsScreen(Screen):
                 )
                 yield Static("\n\nThe default for Ollama is:\nhttp://localhost:11434")
 
-            with Vertical(id="EditContexts"):
+            with TabPane("Edit Contexts", id="EditContexts"):
                 # new context
-                yield Static("\n")
+                yield Static("\n\n")
                 yield Label("Add New Context")
                 yield Input(
                     placeholder="Add New Context Here",
@@ -84,9 +77,10 @@ class SettingsScreen(Screen):
                 )
                 yield Button("Update Context", id="EditContext", variant="success")
 
-            with Vertical(id="EditTopics"):
+            with TabPane("Edit Topics", id="EditTopics"):
+
                 # new topic
-                yield Static("\n")
+                yield Static("\n\n")
                 yield Label("Add New Topic")
                 yield Input(
                     placeholder="Add New Topic Here",
@@ -107,7 +101,8 @@ class SettingsScreen(Screen):
                 )
                 yield Button("Save Topic Update", id="EditTopic", variant="success")
 
-            with Vertical(id="EditModels"):
+            with TabPane("Edit Models", id="EditModels"):
+                yield Static("\n\n")
                 yield Label("Pull New Models:")
                 yield Button("Pull Model", id="PullModel", variant="success")
                 yield Input(
@@ -152,7 +147,8 @@ class SettingsScreen(Screen):
 
     @on(Button.Pressed, "#CloseSetting")
     def close_settings_screen(self, event: Button.Pressed) -> None:
-        logging.debug("CloseSetting")
+        logging.debug("CloseSetting")            
+        #self.dismiss(self.close_message)
         self.dismiss()
 
 
