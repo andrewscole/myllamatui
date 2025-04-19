@@ -6,11 +6,10 @@ from peewee import *
 from textual import on  # , work
 from textual.app import App, ComposeResult
 from textual.containers import Grid, VerticalScroll
-from textual.reactive import reactive
+from textual.reactive import reactive, var
 from textual.widgets import (
     Button,
     DataTable,
-    DirectoryTree,
     Footer,
     Header,
     Input,
@@ -32,6 +31,7 @@ from myllamacli.chats import (
     resume_previous_chats_ui
 )
 from src.myllamacli.topics_contexts import generate_current_topic_summary, create_context_dict
+
 from src.myllamacli.llm_models import (
     pull_model,
     delete_llm_model,
@@ -41,7 +41,9 @@ from src.myllamacli.llm_models import (
 )
 
 from src.myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from src.myllamacli.ui_screens_widgets import SettingsScreen, FilePathScreen, QuitScreen, QuestionAsk
+from src.myllamacli.ui_modal_and_widgets import QuitScreen, QuestionAsk, FileSelected, SettingsChanged
+from src.myllamacli.ui_file_screen import FilePathScreen
+from src.myllamacli.ui_settings_screen import SettingsScreen
 
 
 logging.basicConfig(
@@ -84,7 +86,6 @@ class OllamaTermApp(App):
         self.chats_loaded = False
 
         # Files
-        self.isdir = False
         self.file_path = False
         self.directory_path = False
 
@@ -272,6 +273,7 @@ class OllamaTermApp(App):
 
         # call LLM 
         logging.debug("questions: {}".format(question))
+        logging.info(self.file_path)        
         chat_object_id, answer, self.LLM_MESSAGES = await chat_with_llm_UI(
             self.url,
             question,
@@ -292,6 +294,12 @@ class OllamaTermApp(App):
         # reset file path so that the file isn't repeatedly reloaded
         self.file_path = False
 
+
+    @on(Button.Pressed, "#settings")
+    def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
+        logging.debug("settings")
+        self.push_screen(SettingsScreen())
+
     # Filepath and File export buttons
     @on(Button.Pressed, "#export")
     @on(Button.Pressed, "#filepathbutton")
@@ -299,260 +307,46 @@ class OllamaTermApp(App):
         """ Handle File buttons in the Main Window """
         if event.button.id == "filepathbutton":
             logging.debug("filepathbutton")
-            self.isdir = False
-            self.push_screen(FilePathScreen("hidden"))
+            self.push_screen(FilePathScreen("hidden", self.chat_object_list, False))
 
         elif event.button.id == "export":
             logging.debug("export")
-            self.isdir = True #because its a dir
-            self.update_display = "visible"
-            self.push_screen(FilePathScreen("visible"))
+            self.push_screen(FilePathScreen("visible", self.chat_object_list, True))
 
-    ###############################################
-    ### ACTIONS | FILE SELECTORS FilePathScreen ###
-    ###############################################
+    ##################################
+    ### Get Data Back from Screens ###
+    ##################################
+
+    def on_file_selected(self, message: FileSelected) -> None:
+        self.file_path = message.path
+        logging.info(self.file_path)
+
+###### trying to get this to work to update  ########
+    def on_settings_changed(self, message: SettingsChanged) -> None:
+        #{'model_select': False, 'topic_tree': True, 'context_select': False} 
+        logging.info("Anything at all?")
+        logging.info(message.context_changed)
+        if message.context_changed == "True":
+            logging.info("context")
+            self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
+            
+        if message.topic_changed == "True":
+            logging.info("topic")
+            self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
+
+        if message.model_changed == "True":
+            self.query_one("#ChatHistoryDisplay_sidebar").refresh(layout=True)
+
+
 
     ##### close buttons for file, moving to filescressn class
 
-    @on(Button.Pressed, "#submitpath")
-    def submit_path_screen(self, event: Button.Pressed) -> None:
-        """ Handle buttons in filepath screen."""
-        # Adds directory selected below to input name and submit
-        if self.isdir:
-            # get file name from input and generate path
-            input = self.query_one("#FilePathInput")
-            file_name = input.value
-            export_path = str(self.directory_path) + "/" + file_name
-            logging.debug(f"export: {export_path}")
 
-            # get choice of entire chat or code
-            export_choice = self.query_one("#exportradio").pressed_index
-            logging.debug(f"export_toggle: {export_choice}")
-            if export_choice == 1:
-                code_only = True
-                self.notify("Exporting Chat. Please wait.")
-            else:
-                code_only = False
-                self.notify("Exporting Code examples from Chat. Please wait.")
-
-            if len(self.LLM_MESSAGES) > 0:
-                export_chat_as_file_ui(export_path, self.chat_object_list, code_only)
-                self.notify("Chats Exported")
-            else: 
-                self.notify("No Chats to export, chat a bit then try again.")
-            self.pop_screen()
-
-    @on(DirectoryTree.FileSelected)
-    def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected):
-        """ Handles tree when importing a file"""
-        if not self.isdir:
-            logging.debug(f"file: {event.path}")
-            self.file_path = event.path
-            self.pop_screen()
-
-    @on(DirectoryTree.DirectorySelected)
-    def on_directory_tree_directory_selected(self, event: DirectoryTree.DirectorySelected):
-        """ Handles tree when choosing Dir for saving"""
-        if self.isdir:  
-            logging.debug(f"directory: {event.path}")
-            self.directory_path = event.path
 
 
     ####################################
     ##### ACTIONS | Settings Window ####
     ####################################
-    @on(Button.Pressed, "#settings")
-    def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
-        logging.debug("settings")
-        self.push_screen(SettingsScreen())
-
-    # close settings screen moving to settings class
-
-    @on(Select.Changed, "#SettingsSelector")
-    def select_changed(self, event: Select.Changed) -> None:
-        self.settings_edit_selector = str(event.value)
-        logging.debug("Settings Selector: {}".format(self.settings_edit_selector))
-        self.query_one("#content_switcher_settings").current = self.settings_edit_selector.replace(
-            " ", ""
-        )
-        if self.settings_edit_selector == "Edit URL":
-            self.updated_url = self.url
-            self.query_one("#CurrentUrl").update(f"Current Url: {self.updated_url}")
-
-    #### URL ####
-    @on(Button.Pressed, "#UpdateUrl")
-    def updateurl_button_changed(self, event: Button.Pressed) -> None:
-        logging.debug("UpdateUrl")
-        input = self.query_one("#inputurl")
-        self.url = input.value
-        self.updated_url = self.url
-        self.query_one("#CurrentUrl").update(f"Current Url: {self.updated_url}")
-
-        currentsettings = CLI_Settings.get_by_id(1)
-        currentsettings.url = self.url
-        currentsettings.save()
-
-        logging.debug(self.url)
-        self.notify("URL Updated. Click Close Settings to return to Chat.")
-        # default for ollama is http://localhost:11434
-
-    #### Context Settings ####
-    @on(Button.Pressed, "#NewContext")
-    async def new_context_button_changed(self, event: Button.Pressed) -> None:
-        logging.debug("NewContext")
-        input = self.query_one("#NewContextInput")
-        logging.debug(input)
-        new_context = input.value
-        logging.debug(new_context)
-        new_context_id = Context.create(text=str(new_context))
-        self.notify("Context Added. Click Close Settings to return to Chat.")
-        self.query_one("#ContextEditChoose").set_options(context_choice_setup())
-
-        # Not sure why but this isn't working
-        #self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
-
-        # this isn't updating. Cannot figure out why
-        #self.run_worker(self.query_one("#ContextDisplay_topbar", Select).set_options(context_choice_setup()), exclusive=True)
-
-
-    @on(Button.Pressed, "#EditContext")
-    async def edit_context_button_changed(self, event: Button.Pressed) -> None:
-        logging.debug("Edit Context Button Pressed")
-        context_id = self.query_one("#ContextEditChoose")
-        logging.debug(context_id.value)
-        context_to_change = Context.get_by_id(context_id.value)
-        input = self.query_one("#EditContextInput")
-        updated_context_text = input.value
-        logging.debug(updated_context_text)
-        context_to_change.text = updated_context_text
-        context_to_change.save()
-        input.clear()
-        self.notify("Context Updated. Click Close Settings to return to Chat.")
-
-        # Not sure why but this isn't working
-        #self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
-
-        # this isn't updating. Cannot figure out why
-        #self.run_worker(self.query_one("#ContextDisplay_topbar", Select).set_options(context_choice_setup()), exclusive=True)
-
-
-    #### Topic Settings ####
-    @on(Button.Pressed, "#NewTopic")
-    def new_topic_button_changed(self, event: Button.Pressed) -> None:
-        input = self.query_one("#NewTopicInput")
-        new_topic = input.value
-        logging.debug("New Topic created: {0}".formt(new_topic))
-        Topic.create(text=str(new_topic))
-        # this isn't updating. Cannot figure out why
-        self.notify("Topic Added. Click Close Settings to return to Chat.")
-
-    @on(Button.Pressed, "#EditTopic")
-    def edit_topic_button_changed(self, event: Button.Pressed) -> None:
-        logging.debug("EditTopic Button Pressed")
-        topic_id = self.query_one("#TopicEditChoose")
-        logging.debug(topic_id.value)
-        topic_to_change = Topic.get_by_id(topic_id.value)
-        input = self.query_one("#EditTopicInput")
-        topic_text = input.value
-        logging.debug("Topic: {0} changed to: {1}".format(topic_to_change, topic_text))
-        topic_to_change.text = topic_text
-        topic_to_change.save()
-        input.clear()
-        self.notify("Topic Updated. Click Close Settings to return to Chat.")
-
-    #### Model ####
-    @on(Button.Pressed, "#PullModel")
-    async def pull_model_button_pressed(self, event: Button.Pressed) -> None:
-        self.notify(
-            "Pulling Model. This might take a while.",
-            severity="information",
-        )
-        stored_llm_models = LLM_MODEL.select()
-        logging.debug("PullModel Button Pressed")
-        input = self.query_one("#ModelInput")
-        logging.info("pulling {}".format(input.value))
-        pull_text = await pull_model(self.url, str(input.value))
-        logging.debug(pull_text.text)
-        if "success" in pull_text.text:
-            # repull to model list for confirmation
-            model_list = await get_raw_model_list(self.url)
-            logging.debug(model_list)
-            self.notify(
-                "Model Pulled and set as model choice. Click Close Settings to return to Chat.",
-                severity="information",
-            )
-            input.clear()
-            # on first pull, replace placeholder with a real model
-            if (
-                "Temp_fake" in [sm.model for sm in stored_llm_models]
-                and len(model_list["models"]) == 1
-            ):
-                to_replace = LLM_MODEL.get(LLM_MODEL.model == "Temp_fake")
-                new_model = model_list["models"][0]
-                to_replace.model = new_model["model"]
-                to_replace.size = new_model["size"]
-                to_replace.currently_available = True
-                to_replace.save()
-
-            add_model_if_not_present(model_list, stored_llm_models)
-            align_db_and_ollama(model_list, stored_llm_models)
-
-            # Not sure why but this isn't working
-            #self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
- 
-
-        else:
-            logging.info("Pull failed. output:{0}".format(pull_text))
-            self.notify("Something Went Wrong. Please check name", severity="error")
-
-        # this isn't updating. Cannot figure out why
-        #self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
-
-    @on(DataTable.CellSelected)
-    def on_data_table_cell_selected(
-        self,
-        event: DataTable.CellSelected,
-    ) -> None:
-        model_list = [model.model for model in LLM_MODEL.select() if model.currently_available == True]
-        selection = str(event.value)
-        if f'{selection}' in model_list:
-            self.query_one("#model_to_delete_label").update(f"To Delete: {selection}")
-            self.model_to_delete = selection
-        else:
-            self.model_to_delete = ""
-            self.query_one("#model_to_delete_label").update(f"To Delete: No Selection")
-
-
-    #### Model ####
-    @on(Button.Pressed, "#DeleteModel")
-    async def delete_model_button_pressed(self, event: Button.Pressed) -> None:
-        logging.debug("DeleteModel Button Pressed")
-        if self.model_to_delete == "":
-            logging.error("Delete: No selection made from Models")
-        else:
-            logging.debug("Deleting {}".format(self.model_to_delete))
-            rtn = await delete_llm_model(self.url, self.model_to_delete)
-            if rtn.status_code == 200:
-                # Set as not available in db
-                dbmodel_to_delete = LLM_MODEL.get(LLM_MODEL.model == self.model_to_delete)
-                dbmodel_to_delete.currently_available = False
-                dbmodel_to_delete.save()
-                self.notify(
-                    "Model Deleted. Click Close Settings to return to Chat.",
-                    severity="information",
-                )
-            
-            # Not sure why but this isn't working
-            #self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
-            
-            else:
-                logging.error(
-                    "Delete of model {0} failed. output:{1}".format(
-                        dbmodel_to_delete.model
-                    ),
-                    rtn,
-                )
-                self.notify("Something Went Wrong. Please check log", severity="error")
 
     ##### add a init section ####
     def done_loading(self) -> None:
