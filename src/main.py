@@ -1,15 +1,11 @@
 import logging
 
-from datetime import datetime
-
 from peewee import *
 from textual import on  # , work
 from textual.app import App, ComposeResult
 from textual.containers import Grid, VerticalScroll
-from textual.reactive import reactive, var
 from textual.widgets import (
     Button,
-    DataTable,
     Footer,
     Header,
     Input,
@@ -27,21 +23,12 @@ from myllamacli.chats import (
     populate_tree_view,
     chat_with_llm_UI,
     create_and_apply_chat_topic_ui,
-    export_chat_as_file_ui,
     resume_previous_chats_ui
 )
 from src.myllamacli.topics_contexts import generate_current_topic_summary, create_context_dict
 
-from src.myllamacli.llm_models import (
-    pull_model,
-    delete_llm_model,
-    get_raw_model_list,
-    add_model_if_not_present,
-    align_db_and_ollama,
-)
-
 from src.myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from src.myllamacli.ui_modal_and_widgets import QuitScreen, QuestionAsk, FileSelected, SettingsChanged
+from myllamacli.ui_modal_widget import QuitScreen, QuestionAsk, FileSelected, SettingsChanged
 from src.myllamacli.ui_file_screen import FilePathScreen
 from src.myllamacli.ui_settings_screen import SettingsScreen
 
@@ -68,15 +55,13 @@ class OllamaTermApp(App):
     TITLE = "LlamaTerminal"
     SUB_TITLE = "Local UI for for accessing Ollama"
 
-    # reactives
-    updated_url = reactive("")
 
     def __init__(self):
         """ Custom init for app"""
         super().__init__()
         # main window
         ##### at start pull in the settings from the DB ####
-        self.url = self.load_get_current_settings().url #self.load_current_url()
+        self.url = self.load_get_current_settings().url
         self.chat_sort_choice = "topics"
         self.model_choice_id = self.load_current_model().id
         self.model_choice_name = self.load_current_model().model
@@ -112,9 +97,6 @@ class OllamaTermApp(App):
     ######## GUI ##########
     def compose(self) -> ComposeResult:
         """ setup GUI for Application. """
-        self.updated_url = self.url
-
-        """Create child widgets for the app."""
         yield Header("Ollama Chats Terminal App")
 
         with Grid():
@@ -273,7 +255,7 @@ class OllamaTermApp(App):
 
         # call LLM 
         logging.debug("questions: {}".format(question))
-        logging.info(self.file_path)        
+        logging.info(self.url)        
         chat_object_id, answer, self.LLM_MESSAGES = await chat_with_llm_UI(
             self.url,
             question,
@@ -298,7 +280,7 @@ class OllamaTermApp(App):
     @on(Button.Pressed, "#settings")
     def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
         logging.debug("settings")
-        self.push_screen(SettingsScreen())
+        self.push_screen(SettingsScreen(self.url))
 
     # Filepath and File export buttons
     @on(Button.Pressed, "#export")
@@ -321,23 +303,23 @@ class OllamaTermApp(App):
         self.file_path = message.path
         logging.info(self.file_path)
 
-###### trying to get this to work to update  ########
     def on_settings_changed(self, message: SettingsChanged) -> None:
-        #{'model_select': False, 'topic_tree': True, 'context_select': False} 
-        logging.info("Anything at all?")
-        logging.info(message.context_changed)
-        if message.context_changed == "True":
+        logging.info(message.url_changed)
+        # messages have to be strings!
+        if message.context_changed != "":
             logging.info("context")
-            self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
-            
-        if message.topic_changed == "True":
-            logging.info("topic")
+            #self.query_one("#ContextDisplay_topbar").set_options(model_choice_setup())
             self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
 
-        if message.model_changed == "True":
-            self.query_one("#ChatHistoryDisplay_sidebar").refresh(layout=True)
+        if message.topic_changed != "":
+            logging.info("topic")
+            #self.query_one("#ChatHistoryDisplay_sidebar").set_options(context_choice_setup())
 
+        if message.model_changed != "":
+            self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
 
+        if message.url_changed != "":
+            self.url = message.url_changed
 
     ##### close buttons for file, moving to filescressn class
 

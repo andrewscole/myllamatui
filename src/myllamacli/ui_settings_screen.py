@@ -1,8 +1,9 @@
 import logging
 
+from datetime import datetime
+
 from textual import on
 from textual.app import ComposeResult
-from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import (
     Button,
@@ -15,19 +16,20 @@ from textual.widgets import (
     TabPane,
 )
 
-from src.myllamacli.db_models import LLM_MODEL, Chat, Context, Topic
-from src.myllamacli.ui_shared import model_choice_setup, context_choice_setup, create_topics_select
-from src.myllamacli.ui_modal_and_widgets import SettingsChanged
+from src.myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
+from src.myllamacli.ui_shared import context_choice_setup, create_topics_select
+from src.myllamacli.llm_models import pull_model, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
+from myllamacli.ui_modal_widget import SettingsChanged
 
 
 class SettingsScreen(Screen):
-    updated_url = reactive("")
 
     # might not need this
-    def __init__(self):
+    def __init__(self, url: str):
         super().__init__()
         self.close_message = ""
-        self.dbmodels = {"model_select": "False", "topic_select": "False", "context_select": "False"}
+        self.dbmodels = {"model_changed": "", "topic_changed": "", "context_changed": "", "url_changed": ""}
+        self.url = url
 
     def compose(self) -> ComposeResult:
 
@@ -42,7 +44,7 @@ class SettingsScreen(Screen):
                 # set url
                 yield Static("\n\n")
                 
-                yield Label(f"Current URL: {self.updated_url}", id="CurrentUrl")
+                yield Label(f"Current URL: {self.url}", id="CurrentUrl")
                 yield Button("UPDATE URL", id="UpdateUrl", variant="success")
                 yield Input(
                     placeholder="current url", id="inputurl", classes="cssquestion_text"
@@ -115,6 +117,7 @@ class SettingsScreen(Screen):
                 yield Label(f"To Delete: No Selection", id="model_to_delete_label")
                 yield Button("Delete Model", id="DeleteModel", variant="warning")
 
+    # I don't like this. It needs updating.
     def models_datatable(self):
         all_models = LLM_MODEL.select()
         table = DataTable(id="models_data_table")
@@ -141,32 +144,22 @@ class SettingsScreen(Screen):
         table.fixed_columns = 1
         return table
 
-    #@on(Select.Changed, "#SettingsSelector")
-    #def select_changed(self, event: Select.Changed) -> None:
-    #    self.settings_edit_selector = str(event.value)
-    #    logging.debug("Settings Selector: {}".format(self.settings_edit_selector))
-    #    self.query_one("#content_switcher_settings").current = self.settings_edit_selector.replace(
-    #        " ", ""
-    #    )
-    #    if self.settings_edit_selector == "Edit URL":
-    #        self.updated_url = self.url
-    #        self.query_one("#CurrentUrl").update(f"Current Url: {self.updated_url}")
-
     #### URL ####
     @on(Button.Pressed, "#UpdateUrl")
     def updateurl_button_changed(self, event: Button.Pressed) -> None:
         logging.debug("UpdateUrl")
         input = self.query_one("#inputurl")
-        self.url = input.value
-        self.updated_url = self.url
-        self.query_one("#CurrentUrl").update(f"Current Url: {self.updated_url}")
+        new_url = input.value
+        self.query_one("#CurrentUrl").update(f"Current Url: {new_url}")
 
         currentsettings = CLI_Settings.get_by_id(1)
-        currentsettings.url = self.url
+        currentsettings.url = new_url
         currentsettings.save()
 
-        logging.debug(self.url)
+        logging.debug(new_url)
         self.notify("URL Updated. Click Close Settings to return to Chat.")
+        self.dbmodels["url_changed"] = new_url
+
         # default for ollama is http://localhost:11434
 
     #### Context Settings ####
@@ -177,10 +170,10 @@ class SettingsScreen(Screen):
         logging.debug(input)
         new_context = input.value
         logging.debug(new_context)
-        new_context_id = Context.create(text=str(new_context))
+        Context.create(text=str(new_context))
         self.notify("Context Added. Click Close Settings to return to Chat.")
         self.query_one("#ContextEditChoose").set_options(context_choice_setup())
-        self.dbmodels["context_select"] = True
+        self.dbmodels["context_changed"] = "True"
 
 
     @on(Button.Pressed, "#EditContext")
@@ -196,7 +189,7 @@ class SettingsScreen(Screen):
         context_to_change.save()
         input.clear()
         self.notify("Context Updated. Click Close Settings to return to Chat.")
-        self.dbmodels["context_select"] = "True"
+        self.dbmodels["context_changed"] = "True"
 
     #### Topic Settings ####
     @on(Button.Pressed, "#NewTopic")
@@ -207,7 +200,7 @@ class SettingsScreen(Screen):
         Topic.create(text=str(new_topic))
         # this isn't updating. Cannot figure out why
         self.notify("Topic Added. Click Close Settings to return to Chat.")
-        self.dbmodels["topic_select"] = "True"
+        self.dbmodels["topic_changed"] = "True"
 
     @on(Button.Pressed, "#EditTopic")
     def edit_topic_button_changed(self, event: Button.Pressed) -> None:
@@ -222,11 +215,13 @@ class SettingsScreen(Screen):
         topic_to_change.save()
         input.clear()
         self.notify("Topic Updated. Click Close Settings to return to Chat.")
-        self.dbmodels["topic_select"] = "True"
+        self.dbmodels["topic_changed"] = "True"
 
     #### Model ####
     @on(Button.Pressed, "#PullModel")
     async def pull_model_button_pressed(self, event: Button.Pressed) -> None:
+
+        #### instead of this, consider using a modal screen ####
         self.notify(
             "Pulling Model. This might take a while.",
             severity="information",
@@ -234,9 +229,25 @@ class SettingsScreen(Screen):
         stored_llm_models = LLM_MODEL.select()
         logging.debug("PullModel Button Pressed")
         input = self.query_one("#ModelInput")
+        
+        # setup loading graphics
+        pull_button = self.query_one("#PullModel")
+        pull_button.loading = True
+        input.loading = True
+
+
         logging.info("pulling {}".format(input.value))
+        self.notify(
+                "Pulling Model. This might take a while.",
+                severity="information",
+            )
         pull_text = await pull_model(self.url, str(input.value))
         logging.debug(pull_text.text)
+
+        # turn off loading graphics
+        pull_button.loading = False
+        input.loading = False
+
         if "success" in pull_text.text:
             # repull to model list for confirmation
             model_list = await get_raw_model_list(self.url)
@@ -260,7 +271,29 @@ class SettingsScreen(Screen):
 
             add_model_if_not_present(model_list, stored_llm_models)
             align_db_and_ollama(model_list, stored_llm_models)
-            self.dbmodels["model_select"] = "True"
+
+###################
+## trying to add to the data table. It's not working all that well.
+            table = DataTable(id="models_data_table")
+            num_of_models = len(LLM_MODEL.select())
+            newmodel = LLM_MODEL.get_by_id(num_of_models)
+            download_date = str(newmodel.modified_at).split(" ")[0]
+            logging.debug(download_date)
+            rows = []
+            rows.append(
+                (
+                    str(newmodel.model),
+                    str(newmodel.currently_available),
+                    str(newmodel.size),
+                    str(download_date),
+                    int(0),
+                )
+            )  
+            table.add_rows(rows)
+
+###################
+
+            self.dbmodels["model_changed"] = "True"
 
         else:
             logging.info("Pull failed. output:{0}".format(pull_text))
@@ -300,10 +333,7 @@ class SettingsScreen(Screen):
                     "Model Deleted. Click Close Settings to return to Chat.",
                     severity="information",
                 )
-                self.dbmodels["model_select"] = "True"
-            # Not sure why but this isn't working
-            #self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
-            
+                self.dbmodels["model_changed"] = "True"   
             else:
                 logging.error(
                     "Delete of model {0} failed. output:{1}".format(
@@ -316,6 +346,6 @@ class SettingsScreen(Screen):
     @on(Button.Pressed, "#CloseSetting")
     def close_settings_screen(self, event: Button.Pressed) -> None:
         logging.debug("CloseSetting")
-        logging.info(f"from settings {self.dbmodels}")
-        self.post_message(SettingsChanged(self.dbmodels["context_select"], self.dbmodels["topic_select"], self.dbmodels["model_select"]))
+        logging.debug(f"from settings {self.dbmodels}")
+        self.post_message(SettingsChanged(self.dbmodels["context_changed"], self.dbmodels["topic_changed"], self.dbmodels["model_changed"], self.dbmodels["url_changed"] ))
         self.dismiss()

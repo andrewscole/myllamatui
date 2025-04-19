@@ -8,6 +8,8 @@ from textual.widgets import (
     Label
 )
 
+
+# message classes
 class FileSelected(Message):
     def __init__(self, path: str):
         super().__init__()
@@ -15,14 +17,14 @@ class FileSelected(Message):
 
 
 class SettingsChanged(Message):
-    def __init__(self, context_changed: str, topic_changed: str, model_changed: str):
+    def __init__(self, context_changed: str, topic_changed: str, model_changed: str, url_changed: str):
         super().__init__()
         self.context_changed = context_changed
         self.topic_changed = topic_changed
         self.model_changed = model_changed
+        self.url_changed = url_changed
 
-
-
+# Modal screen
 class QuitScreen(ModalScreen):
     """Shows warning that I am qutting"""
 
@@ -38,7 +40,7 @@ class QuitScreen(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Label(self.qs_message, id="qa_savingmessage", classes="QuitScreen")
         
-
+# widgets
 class QuestionAsk(HorizontalGroup):
     """Horizontal widiget group for asking questions."""
 
