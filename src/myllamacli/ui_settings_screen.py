@@ -19,8 +19,7 @@ from textual.widgets import (
 from src.myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
 from src.myllamacli.ui_shared import context_choice_setup, create_topics_select
 from src.myllamacli.llm_models import pull_model, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
-from myllamacli.ui_modal_widget import SettingsChanged
-
+from myllamacli.ui_modal_widget import SettingsChanged, QuitScreen
 
 class SettingsScreen(Screen):
 
@@ -28,6 +27,8 @@ class SettingsScreen(Screen):
     def __init__(self, url: str):
         super().__init__()
         self.close_message = ""
+        self.model_to_delete = ""
+
         self.dbmodels = {"model_changed": "", "topic_changed": "", "context_changed": "", "url_changed": ""}
         self.url = url
 
@@ -121,25 +122,17 @@ class SettingsScreen(Screen):
     def models_datatable(self):
         all_models = LLM_MODEL.select()
         table = DataTable(id="models_data_table")
-        table.add_columns(
-            "name", "currently_available", "size", "downloaded", "Chats Used"
-        )
-        rows = []
+        tbl_columns = {"Name": "name", "Currently Available": "available", "Size":"size", "Download Date": "date", "Number of Chats": "used"}
+        for item in tbl_columns:
+            table.add_column(item, key=tbl_columns[item])        
+        count = 0
         for model in all_models:
             logging.debug(model.id)
             model_usage = Chat.select().where(Chat.llm_model_id == model.id).count()
             download_date = str(model.modified_at).split(" ")[0]
             logging.debug(download_date)
-            rows.append(
-                (
-                    str(model.model),
-                    str(model.currently_available),
-                    str(model.size),
-                    str(download_date),
-                    int(model_usage),
-                )
-            )
-        table.add_rows(rows)
+            table.add_row(str(model.model), str(model.currently_available), str(model.size), str(download_date), int(model_usage),key=f"R{str(count)}")
+            count += 1
         table.zebra_stripes = True
         table.fixed_columns = 1
         return table
@@ -222,31 +215,15 @@ class SettingsScreen(Screen):
     async def pull_model_button_pressed(self, event: Button.Pressed) -> None:
 
         #### instead of this, consider using a modal screen ####
-        self.notify(
-            "Pulling Model. This might take a while.",
-            severity="information",
-        )
         stored_llm_models = LLM_MODEL.select()
         logging.debug("PullModel Button Pressed")
         input = self.query_one("#ModelInput")
-        
-        # setup loading graphics
-        pull_button = self.query_one("#PullModel")
-        pull_button.loading = True
-        input.loading = True
-
-
+    
         logging.info("pulling {}".format(input.value))
-        self.notify(
-                "Pulling Model. This might take a while.",
-                severity="information",
-            )
+        self.app.push_screen(QuitScreen("Pulling Model. This might take a while."))
         pull_text = await pull_model(self.url, str(input.value))
         logging.debug(pull_text.text)
-
-        # turn off loading graphics
-        pull_button.loading = False
-        input.loading = False
+        self.app.pop_screen()
 
         if "success" in pull_text.text:
             # repull to model list for confirmation
@@ -269,30 +246,29 @@ class SettingsScreen(Screen):
                 to_replace.currently_available = True
                 to_replace.save()
 
+
+            #update database
             add_model_if_not_present(model_list, stored_llm_models)
             align_db_and_ollama(model_list, stored_llm_models)
 
-###################
-## trying to add to the data table. It's not working all that well.
-            table = DataTable(id="models_data_table")
-            num_of_models = len(LLM_MODEL.select())
-            newmodel = LLM_MODEL.get_by_id(num_of_models)
-            download_date = str(newmodel.modified_at).split(" ")[0]
-            logging.debug(download_date)
-            rows = []
-            rows.append(
-                (
-                    str(newmodel.model),
-                    str(newmodel.currently_available),
-                    str(newmodel.size),
-                    str(download_date),
-                    int(0),
-                )
-            )  
-            table.add_rows(rows)
 
-###################
+            #### check data table and change availablity to true.
+            table = self.query_one("#models_data_table")
+            if str(input.value) in [sm.model for sm in stored_llm_models]:
+                for row_index in range(table.row_count):
+                    column_key = "name"
+                    cell_value = table.get_cell(f"R{row_index}", column_key)
+                    if cell_value == str(input.value):
+                        table.update_cell(f"R{row_index}", "available", "True")
 
+            else: 
+                num_of_models = len(LLM_MODEL.select())
+                newmodel = LLM_MODEL.get_by_id(num_of_models)
+                download_date = str(newmodel.modified_at).split(" ")[0]
+                logging.debug(download_date)
+                table.add_row(str(newmodel.model), str(newmodel.currently_available), str(newmodel.size), str(download_date), int(0), key=f"R{str(table.row_count)}")
+
+            # finally send text to update the select on the main window
             self.dbmodels["model_changed"] = "True"
 
         else:
@@ -305,13 +281,18 @@ class SettingsScreen(Screen):
         self,
         event: DataTable.CellSelected,
     ) -> None:
+        
         model_list = [model.model for model in LLM_MODEL.select() if model.currently_available == True]
         selection = str(event.value)
+        
         if f'{selection}' in model_list:
             self.query_one("#model_to_delete_label").update(f"To Delete: {selection}")
             self.model_to_delete = selection
+
+            self.model_avail_coordinate = event.coordinate.right()
+            logging.debug(self.model_avail_coordinate)
+
         else:
-            self.model_to_delete = ""
             self.query_one("#model_to_delete_label").update(f"To Delete: No Selection")
 
 
@@ -319,8 +300,29 @@ class SettingsScreen(Screen):
     @on(Button.Pressed, "#DeleteModel")
     async def delete_model_button_pressed(self, event: Button.Pressed) -> None:
         logging.debug("DeleteModel Button Pressed")
+
+        #### just for testing ####
+        #stored_llm_models = LLM_MODEL.select()
+        #table = self.query_one("#models_data_table")
+        #target = 'qwen2.5-coder:0.5b'
+        #logging.info(table.columns.keys())
+        #logging.info(table.get_row("R0"))
+        #logging.info(table.get_column("name"))
+        #if target in [sm.model for sm in stored_llm_models]:
+        #    logging.info("found it")
+        #    logging.info(table.row_count)
+        #    for row_index in range(table.row_count):
+        #        logging.info(row_index)
+        #        column_key = "name"
+        #        cell_value = table.get_cell(f"R{row_index}", column_key)
+        #        logging.info(cell_value)
+        #        if cell_value == target:
+        #            table.update_cell(f"R{row_index}", "available", "True")
+    
         if self.model_to_delete == "":
             logging.error("Delete: No selection made from Models")
+            self.notify("Nothing to Delete. Please select the model you would like to delete from the table above.", severity="warning")
+
         else:
             logging.debug("Deleting {}".format(self.model_to_delete))
             rtn = await delete_llm_model(self.url, self.model_to_delete)
@@ -333,6 +335,12 @@ class SettingsScreen(Screen):
                     "Model Deleted. Click Close Settings to return to Chat.",
                     severity="information",
                 )
+
+
+                ### this cdoesn't work
+                table = self.query_one("#models_data_table")
+                table.update_cell_at(self.model_avail_coordinate, value="False")
+
                 self.dbmodels["model_changed"] = "True"   
             else:
                 logging.error(

@@ -97,6 +97,12 @@ class OllamaTermApp(App):
     ######## GUI ##########
     def compose(self) -> ComposeResult:
         """ setup GUI for Application. """
+
+
+        # setup tree. THE FU
+
+
+
         yield Header("Ollama Chats Terminal App")
 
         with Grid():
@@ -116,13 +122,13 @@ class OllamaTermApp(App):
             )
             yield Select(
                 iter(
-                    (sort_choice, sort_choice) for sort_choice in ["Topics", "Contexts"]
+                    (sort_choice, sort_choice) for sort_choice in ["Topics", "Dates"]
                 ),
                 prompt="Sort Chats By:",
                 id="ChatHistorySelect_topright",
             )
             yield VerticalScroll(id="CurrentChant_MainChatWindow")
-            yield Tree("Chat History", id="ChatHistoryDisplay_sidebar")
+            yield Tree("Previous Chats", id="ChatHistoryDisplay_sidebar")
             yield QuestionAsk(id="QuestionAsk_bottombar")
             yield Button("Add File", id="filepathbutton", variant="primary")
             yield Button("Export Chats", id="export", variant="default")
@@ -131,18 +137,6 @@ class OllamaTermApp(App):
     #############################
     #### Widget Helper Defs ####
     #############################
-
-    def update_tree(self, tree):
-        """Update tree with selections from the DB"""
-        logging.debug("sort choice: {}".format(self.chat_sort_choice))
-        tree.clear()
-        old_chats = tree.root.expand()
-        # old_chats = tree.root.add("Chat History", expand=True)
-        old_chat_list = populate_tree_view(self.chat_sort_choice)
-        for old_chat in old_chat_list:
-            old_chats.add_leaf(old_chat)
-        old_chats.add_leaf("New Chat")
-        return tree
 
     def add_wdg_to_scroll(
         self, chatcontainer, question, answer, chatdate, previouschatdate
@@ -168,15 +162,28 @@ class OllamaTermApp(App):
         mounted_labels.remove()
         mounted_markdowns.remove()
 
+
+    def update_tree(self, tree):
+        """Update tree with selections from the DB"""
+        logging.debug("sort choice: {}".format(self.chat_sort_choice))
+        tree.clear()
+        old_chats = tree.root.expand()
+        old_chat_list = populate_tree_view(self.chat_sort_choice)
+        for old_chat in old_chat_list:
+            old_chats.add_leaf(old_chat)
+        old_chats.add_leaf("New Chat")
+        return tree
+
+
     #################################
     ##### ACTIONS | Main Window #####
     #################################
     async def on_tree_node_selected(self, event: Tree) -> None:
         """Load Old Chats in tree. If new just, save existing and clear."""
-        if len(self.chat_object_list) > 0:
-            logging.info("saving chats")
-            await self.action_save()
-            self.chat_object_list = []
+        #if len(self.chat_object_list) > 0:
+        #    await self.action_save()
+        #    self.chat_object_list = []
+        await self.action_save()
         choice_num = event.node.id + 1
         logging.debug("Tree label and id selected: {0}, {1}".format(event.node.label, choice_num))
 
@@ -187,7 +194,8 @@ class OllamaTermApp(App):
             if self.chat_sort_choice == "topics":
                 previous_chats = Chat.select().where(Chat.topic_id == choice_num)
             else:
-                # self.chat_sort_choice == "contexts":
+                # self.chat_sort_choice == "dates":
+                ##### switch this to dates #####
                 previous_chats = Chat.select().where(Chat.context_id == choice_num)
 
             chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
@@ -313,7 +321,7 @@ class OllamaTermApp(App):
 
         if message.topic_changed != "":
             logging.info("topic")
-            #self.query_one("#ChatHistoryDisplay_sidebar").set_options(context_choice_setup())
+            self.query_one("#ChatHistoryDisplay_sidebar").clear
 
         if message.model_changed != "":
             self.query_one("#ModelDisplay_topbar").set_options(model_choice_setup())
@@ -353,6 +361,7 @@ class OllamaTermApp(App):
     async def action_save(self) -> None:
         """Save a summary of the chats and quit."""     
         if len(self.chat_object_list) > 0 and self.topic_id == 1:
+            logging.debug("saving chats")
             self.push_screen(QuitScreen("Updating Chat Topics. This will take a few seconds."))
             await self.add_topic_to_chat()
             self.pop_screen()

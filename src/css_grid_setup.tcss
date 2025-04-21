@@ -4,13 +4,6 @@ Grid {
 	grid-rows: 1fr, 8fr, 1 fr; */
 }
 
-
-/* #Topbar_top {
-    row-span: 1;
-	column-span: 10;
-    background: transparent;
-}*/
-
 #SettingsButton_topright {
 	column-span: 1;
 	row-span: 1;
@@ -33,6 +26,7 @@ Grid {
 	row-span: 1;
 
 }
+
 
 #CurrentChant_MainChatWindow {
 	column-span: 8;
@@ -143,7 +137,6 @@ QuitScreen {
     content-align-horizontal: right;
     color:rgb(247, 247, 250);
     background: transparent;
-    /*background:rgb(0, 25, 92);*/
 }
 
 .cssdate {

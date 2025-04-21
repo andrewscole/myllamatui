@@ -56,7 +56,12 @@ def add_model_if_not_present(ollama_list: List, stored_llm_models: List) -> None
 
     count = 0
     for existing_model in ollama_list["models"]:
-        if existing_model not in db_list:
+        if existing_model["model"] in db_list:
+            db_model = LLM_MODEL.get(LLM_MODEL.model == existing_model["model"])
+            db_model.currently_available=True
+            db_model.save()
+
+        else:
             LLM_MODEL.get_or_create(
                 model=existing_model["model"],
                 size=existing_model["size"],
