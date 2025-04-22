@@ -16,10 +16,11 @@ from textual.widgets import (
     TabPane,
 )
 
-from src.myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
-from src.myllamacli.ui_shared import context_choice_setup, create_topics_select
-from src.myllamacli.llm_models import pull_model, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
-from myllamacli.ui_modal_widget import SettingsChanged, QuitScreen
+from myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
+from myllamacli.ui_shared import context_choice_setup, create_topics_select
+from myllamacli.llm_models import pull_model, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
+from myllamacli.ui_widgets_messages import SettingsChanged
+from myllamacli.ui_modal_screens import QuitScreen
 
 class SettingsScreen(Screen):
 

@@ -1,12 +1,15 @@
+import logging
+
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import HorizontalGroup
-from textual.screen import ModalScreen
 from textual.message import Message
 from textual.widgets import (
     Button,
     Input,
-    Label
 )
+
+from peewee import *
 
 
 # message classes
@@ -24,22 +27,14 @@ class SettingsChanged(Message):
         self.model_changed = model_changed
         self.url_changed = url_changed
 
-# Modal screen
-class QuitScreen(ModalScreen):
-    """Shows warning that I am qutting"""
 
-    CSS = """
-    QuitScreen {
-        align: center middle;
-    }
-    """
-    def __init__(self, qs_message):
+class IterationsScreenMessage(Message):
+    def __init__(self, count: str, model_info_stringlist: str):
         super().__init__()
-        self.qs_message = qs_message
+        self.count = count
+        self.model_info_stringlist = model_info_stringlist
 
-    def compose(self) -> ComposeResult:
-        yield Label(self.qs_message, id="qa_savingmessage", classes="QuitScreen")
-        
+
 # widgets
 class QuestionAsk(HorizontalGroup):
     """Horizontal widiget group for asking questions."""

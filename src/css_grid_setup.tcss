@@ -12,7 +12,7 @@ Grid {
 
 #ContextDisplay_topbar {
     row-span: 1;
-	column-span: 5;
+	column-span: 6;
 }
 
 #ModelDisplay_topbar {
@@ -21,12 +21,11 @@ Grid {
 
 }
 
-#ChatHistorySelect_topright {
-	column-span: 2;
+#iterations_mainscreen {
+	column-span: 1;
 	row-span: 1;
 
 }
-
 
 #CurrentChant_MainChatWindow {
 	column-span: 8;
@@ -35,11 +34,16 @@ Grid {
     background: rgb(2, 1, 21);
 }
 
+#ChatHistorySelect_topright {
+	column-span: 2;
+	row-span: 1;
+
+}
 
 #ChatHistoryDisplay_sidebar {
 	padding: 3;
 	column-span: 2;
-	row-span: 8;
+	row-span: 7;
     color:rgb(251, 251, 251);
     background: transparent;
 }

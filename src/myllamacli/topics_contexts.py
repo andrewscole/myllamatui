@@ -2,7 +2,7 @@ import logging
 
 from typing import List, Dict
 
-from src.myllamacli.db_models import Topic
+from myllamacli.db_models import Topic
 
 
 def create_context_dict(context_text: str) -> Dict:

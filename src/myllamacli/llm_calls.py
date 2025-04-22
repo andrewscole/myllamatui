@@ -43,6 +43,26 @@ def generate_data_for_model_pull(model: str) -> Dict:
     return {"model": model}
 
 
+def generate_input_dict(input: str) -> Dict:
+    """Create input dict"""
+
+    return {"role": "user", "content": input}
+
+
+def parse_response(response_json: Dict) -> tuple[str, str]:
+    """parse json data to pull out responses"""
+    # messages
+    logging.debug(response_json)
+    if "message" in response_json.keys():
+        chat_key = "message"
+        answer = response_json["message"]["content"]
+    # prompt
+    else:
+        chat_key = "response"
+        answer = response_json["response"]
+    return chat_key, answer
+
+
 async def post_to_llm(API_ENDPOINT: str, data: dict) -> httpx.Response:
     """post call"""
 

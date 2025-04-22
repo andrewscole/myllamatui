@@ -2,14 +2,14 @@ import logging
 
 from typing import Dict, List
 
-from src.myllamacli.llm_calls import (
+from myllamacli.llm_calls import (
     generate_endpoint,
     generate_data_for_model_pull,
     post_to_llm,
     get_from_llm,
     delete_llm_call,
 )
-from src.myllamacli.db_models import LLM_MODEL, Chat
+from myllamacli.db_models import LLM_MODEL, Chat
 
 
 # pulling and parsing return from Ollama

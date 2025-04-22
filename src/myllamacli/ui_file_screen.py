@@ -14,8 +14,8 @@ from textual.widgets import (
     Static,
 )
 
-from src.myllamacli.chats import parse_export_path
-from myllamacli.ui_modal_widget import FileSelected
+from myllamacli.export_files import parse_export_path, export_chat_as_file_ui
+from myllamacli.ui_widgets_messages import FileSelected
 
 class FilePathScreen(Screen):
     CSS = """

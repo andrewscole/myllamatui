@@ -2,7 +2,7 @@ from typing import List, Tuple
 from peewee import *
 from datetime import datetime
 
-from src.myllamacli.shared_utils import set_database_path
+from myllamacli.shared_utils import set_database_path
 
 MYLLAMACLI_DB = set_database_path()
 
@@ -21,8 +21,13 @@ class Context(BaseModel):
     created_at = DateTimeField(default=datetime.now)
 
 
+#class Subject(BaseModel):
+#    text = TextField(unique=True)
+#    created_at = DateTimeField(default=datetime.now)
+
 class Topic(BaseModel):
     text = TextField(unique=True)
+#    subject_id = ForeignKeyField(Topic, backref="topics")
     created_at = DateTimeField(default=datetime.now)
 
 

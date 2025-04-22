@@ -4,7 +4,7 @@ import json
 
 from typing import Dict, List
 
-from src.myllamacli.db_models import (
+from myllamacli.db_models import (
     Chat,
     Context,
     Topic,
@@ -12,7 +12,7 @@ from src.myllamacli.db_models import (
     CLI_Settings,
     SQLITE_DB,
 )
-from src.myllamacli.llm_models import get_raw_model_list
+from myllamacli.llm_models import get_raw_model_list
 
 CLI_DEFAULTS = {
     "url": "http://localhost:11434",
