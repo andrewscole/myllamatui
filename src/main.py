@@ -7,12 +7,13 @@ from typing import List, Dict, Tuple
 from peewee import *
 from textual import on
 from textual.app import App, ComposeResult
-from textual.containers import Grid, VerticalScroll
+from textual.containers import Grid, VerticalScroll, Horizontal, Vertical
 from textual.widgets import (
     Button,
     Footer,
     Header,
     Input,
+    Label,
     Markdown,
     Select,
     Static,
@@ -87,6 +88,9 @@ class OllamaTermApp(App):
         self.previous_messages = []
         self.chat_object_list = []
 
+        #display
+        self.model_date_display_info = ""
+
         # iterations screen
         self.iteration_count = 0
         self.model_info_as_string = ""
@@ -155,22 +159,41 @@ class OllamaTermApp(App):
     #############################
 
     def add_wdg_to_scroll(
-        self, question, answer, chatdate, previouschatdate
+        self, question, answer, model_name, previouschatdate
     ):
         """Create and mount widgets for chat"""
-        # date
         chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
+        # Now Poulte question header
+        model_date = Label(f"{str(model_name)} - ")
 
-        if chatdate is not None and chatdate != previouschatdate:
-            qdate = Static(chatdate, classes="cssdate")
-            chatcontainer.mount(qdate)
+        # mount date and model info
+        if previouschatdate is not None:
+            qdate = previouschatdate
+        else:
+            qdate = "Today"
+
+        model_date_display_info = f"{str(model_name)} - {qdate}"
+        #chatcontainer.mount(model_date)
         
-        # question
+        # mount to chat container
         if question != EVALUATION_QUESTION:
-            qwidget = Markdown(question, classes="cssquestion")
-            chatcontainer.mount(qwidget)
+            question_container = Markdown(question, classes="cssquestion")
 
-        #answer
+        else:
+            question_container = Markdown("Evaluation:",  classes="cssquestion")
+      
+        # add to question group 
+        #chatcontainer.mount(model_date, question_container)
+        logging.info(model_date_display_info)
+        logging.info(self.model_date_display_info)
+
+        if model_date_display_info != self.model_date_display_info:
+            self.model_date_display_info = f"{str(model_name)} - {qdate}"
+        
+        chatcontainer.mount(Label(self.model_date_display_info , classes="cssdate"))
+        chatcontainer.mount(question_container)
+
+        #### mount answer ####
         answer_container = Markdown(answer, classes="cssanswer")
         chatcontainer.mount(answer_container)
         
@@ -246,7 +269,7 @@ class OllamaTermApp(App):
         self.chat_object_list.append(chat_object_id)
 
         # display
-        self.add_wdg_to_scroll(question, answer, None, None)
+        self.add_wdg_to_scroll(question, answer, model_name, None)
 
 
     #################################
@@ -358,8 +381,13 @@ class OllamaTermApp(App):
                 question = chat.question
                 answer = chat.answer
                 chatdate = str(chat.created_at).split()
-                self.add_wdg_to_scroll(question, answer, chatdate[0], previous_chat_date)
                 previous_chat_date = chatdate[0]
+
+                # get model id
+                llm_model =LLM_MODEL.get_by_id(chat.llm_model_id)
+
+                self.add_wdg_to_scroll(question, answer, llm_model.model, previous_chat_date)
+
             reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(previous_chats)
             self.LLM_MESSAGES = self.LLM_MESSAGES + reformatted_previous_chats
             self.chat_object_list = list(previous_chats)
@@ -373,7 +401,7 @@ class OllamaTermApp(App):
 
 
     @on(Button.Pressed, "#iterations_mainscreen")
-    def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
+    def add_interations_screen_to_stack(self, event: Button.Pressed) -> None:
         logging.debug("settings")
         self.push_screen(IterationsScreen(self.iteration_count, self.model_info_as_string))
 
@@ -417,18 +445,18 @@ class OllamaTermApp(App):
             self.url = message.url_changed
 
 
-    ###### THIS IS NOT WORKING
-    def on_interations_changed(self, message: IterationsScreenMessage) -> None:
-        logging.info("iteracitons_selections passed to main")
-        logging.info(message.count)
+        ###### THIS IS NOT WORKING ####
+    def on_iterations_screen_message(self, message: IterationsScreenMessage):        
+        logging.info("iteracitons_selections caught")
+        logging.info(message.interations_count)
         logging.info(message.model_info_stringlist)
         
-        self.iteration_count = str(message.count)
-        logging.info(self.iteration_count)
+        #self.iteration_count = message.interations_count
+        #logging.info(self.iteration_count)
 
         # will need to unpack this
-        self.model_info_as_string = message.model_info_stringlist
-        logging.info(self.model_info_as_string)
+        #self.model_info_as_string = message.model_info_stringlist
+        #logging.info(self.model_info_as_string)
 
 
     ##### TO DO add a init section ####

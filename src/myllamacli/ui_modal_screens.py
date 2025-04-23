@@ -4,7 +4,7 @@ from peewee import *
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll
+from textual.containers import VerticalScroll, Horizontal
 from textual.screen import Screen, ModalScreen
 from textual.widgets import (
     Button,
@@ -15,7 +15,7 @@ from textual.widgets import (
 
 from myllamacli.db_models import LLM_MODEL
 from myllamacli.ui_shared import model_choice_setup
-from myllamacli.ui_widgets_messages import SettingsChanged, IterationsScreenMessage
+from myllamacli.ui_widgets_messages import IterationsScreenMessage
 
 # Modal screens
 class QuitScreen(ModalScreen):
@@ -34,7 +34,7 @@ class QuitScreen(ModalScreen):
         yield Label(self.qs_message, id="qa_savingmessage", classes="ModelIteration")
 
 
-class IterationsScreen(ModalScreen):
+class IterationsScreen(Screen):
     """Allows me to set the #of iterations I want"""
 
     CSS = """
@@ -58,17 +58,23 @@ class IterationsScreen(ModalScreen):
         """ Get Selection from Model select box. """
         self.count += 1
         veiwcontainer = self.query_one("#model_iteration_container")
-        
+
+        sectionrow = Horizontal()
         modelselect = Select(
                 model_choice_setup(), prompt=f"Choose Model for followup #{self.count}:", id=f"modelselect{self.count}"
             )
+        #purposeselect = Select(
+        #        "Evaluation, New Prompt", prompt=f"Choose Model for followup #{self.count}:", id=f"modelselect{self.count}"
+        #    )
+        sectionrow.mount(modelselect)
+        #sectionrow.mount(purposeselect)
         veiwcontainer.mount(modelselect)
 
     # this needs a way to differentiate between instances
     @on(Select.Changed)
     def select_model_changed(self, event: Select.Changed) -> None:
         """ Get Selection from Model select box. """
-        logging.info(event)
+        logging.debug(event)
         model_choice_id = str(event.value)
         model_obj = LLM_MODEL.get_by_id(model_choice_id)
         model_choice_name = model_obj.model

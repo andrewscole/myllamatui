@@ -29,10 +29,11 @@ class SettingsChanged(Message):
 
 
 class IterationsScreenMessage(Message):
-    def __init__(self, count: str, model_info_stringlist: str):
+    def __init__(self, interations_count: str, model_info_stringlist: str):
         super().__init__()
-        self.count = count
+        self.interations_count = interations_count
         self.model_info_stringlist = model_info_stringlist
+
 
 
 # widgets

@@ -121,7 +121,7 @@ QuitScreen {
 
 }
 .cssquestion {
-    padding: 0 0;
+    padding: 0 1;
     offset: 15 0;
     background: $panel;
     text-align: right;
@@ -144,15 +144,13 @@ QuitScreen {
 }
 
 .cssdate {
-	column-span:6;
-    opacity: 75%;
+    padding: 0 0;
+    offset: 1 0;
     background: $panel;
-    text-align: center;
-    align: center top;
-    border: round rgb(221, 255, 0);
+    text-align: right;
+    align: right top;
     content-align-horizontal: right;
-    color:rgb(221, 255, 0);
-    background:rgb(29, 53, 0);
+    background: transparent;
 }
 
 .notifyloading {
