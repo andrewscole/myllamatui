@@ -11,7 +11,7 @@ def generate_endpoint(url: str, action: str) -> str:
     action_dict = {
         "show_list": "tags",
         "pull": "pull",
-        "model": "ps",
+        "model_info": "show",
         "generate": "generate",
         "delete": "delete",
         "chat": "chat",

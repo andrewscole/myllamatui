@@ -12,7 +12,7 @@ from myllamacli.db_models import (
     CLI_Settings,
     SQLITE_DB,
 )
-from myllamacli.llm_models import get_raw_model_list
+from myllamacli.llm_models import get_raw_model_list, get_model_capabilities
 
 CLI_DEFAULTS = {
     "url": "http://localhost:11434",
@@ -53,7 +53,7 @@ async def setup_db_and_initialize_defaults() -> None:
 
 def create_temp_fake_model() -> None:
     logging.info("No Models Found. Creating a fake model. Please pull a model.")
-    LLM_MODEL.create(model="Temp_fake", specialization="General", size=0, currently_available=True)
+    LLM_MODEL.create(model="Temp_fake", specialization="general", size=0, currently_available=True)
 
 
 async def read_add_models(url: str) -> None:
@@ -65,7 +65,7 @@ async def read_add_models(url: str) -> None:
             for model in model_list["models"]:
                 LLM_MODEL.create(
                     model=model["model"],
-                    specialization="General",
+                    specialization= await get_model_capabilities(url, str(model["model"])),
                     size=model["size"],
                     currently_available=True
                 )

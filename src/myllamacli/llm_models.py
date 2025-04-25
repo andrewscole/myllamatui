@@ -1,6 +1,7 @@
 import logging
+import json
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from myllamacli.llm_calls import (
     generate_endpoint,
@@ -30,10 +31,10 @@ async def get_raw_model_list(url: str) -> Dict:
     return raw_model_list.json()
 
 
-async def pull_model(url: str, model: str) -> str:
-    """Pull llm model."""
+async def post_action_to_model_manager(url: str, model: str, action: str) -> str:
+    """Calls an api via action in the llm model manager."""
 
-    apiendpoint = generate_endpoint(url, "pull")
+    apiendpoint = generate_endpoint(url, action)
     data = generate_data_for_model_pull(model)
     pull_text = await post_to_llm(apiendpoint, data)
     return pull_text
@@ -47,6 +48,50 @@ async def delete_llm_model(url: str, model: str) -> str:
     delete_text = await delete_llm_call(apiendpoint, data)
 
     return delete_text
+
+
+async def pull_and_parse_model_capabilities(url: str, model_name: str) -> Optional[str]:
+    """ Pull model info and return capability. """
+
+    capability = 'general'
+
+    model_info = await post_action_to_model_manager(url, model_name, "model_info")
+    model_info_json = model_info.json()
+    capabilities_list = model_info_json.get('capabilities', [capability])
+    
+    for specialization in capabilities_list:
+        if specialization not in ['completion', 'general', 'tools', 'insert']:
+            capability = specialization    
+    return capability
+
+
+def parse_model_name_for_skill(model_name: str) -> Optional[str]:
+    """ check model name for capability. """
+
+    capability = None
+    standard_tool_list = {"code": "coding", "vision": "vision", "embed": "embedding"}
+    for key in standard_tool_list.keys():
+        if str(key) in str(model_name):
+            capability = standard_tool_list[key]
+    return capability
+
+
+async def get_model_capabilities(url: str, model_name: str) -> str:
+    """ Parse name or pull info to determine capability. """
+    
+    # if the name tells us what it is, just use that otherwise kick out general
+    capability = parse_model_name_for_skill(model_name)
+    #else do a call and set from the results
+    if not capability:
+        capability = await pull_and_parse_model_capabilities(url, model_name)
+    return capability
+
+
+
+
+        
+    #otherwise look it up.
+    return await pull_and_parse_model_capabilities(url, model_name)
 
 
 # checking db against Ollama

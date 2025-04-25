@@ -8,8 +8,8 @@ from datetime import datetime
 from peewee import fn
 from typing import List, Dict, Tuple
 
-from myllamacli.db_models import Chat, Topic, Context, CLI_Settings, LLM_MODEL
-from myllamacli.topics_contexts import compare_topics, create_context_dict
+from myllamacli.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
+from myllamacli.topics_contexts_categories import compare_topics_and_categories, compare_topics, create_context_dict, generate_current_topic_summary, generate_category_summary
 from myllamacli.llm_calls import (
     generate_endpoint,
     generate_data_for_chat,
@@ -18,7 +18,6 @@ from myllamacli.llm_calls import (
     parse_response
 )
 from myllamacli.shared_utils import open_file
-
 
 def save_chat(question, answer, context_id, topic_id, model_id):
     """ Save the current chat to the DB"""
@@ -66,22 +65,48 @@ async def chat_with_llm_UI(url: str,
     return answer, MESSAGES
 
 
-async def create_and_apply_chat_topic_ui(url: str, 
-    chat_object_list: List, MESSAGES: List, model_name: str
-) -> None:
-    """ Generate and update topic for the current chats"""
-
+async def create_content_summary(url: str, MESSAGES: list, model_name: str) -> str:
     # setup vars
     api_endpoint = generate_endpoint(url, "chat")
     data = generate_data_for_chat(MESSAGES, model_name)
     response = await post_to_llm(api_endpoint, data)
     logging.debug(response.json())
     _, topic_summary = parse_response(response.json())
+    return topic_summary
+
+
+async def create_and_apply_chat_topic_ui(url: str, 
+    chat_object_list: List, MESSAGES: List, model_name: str
+) -> None:
+    """ Generate and update topic for the current chats"""
+
+    # setup vars
+#    api_endpoint = generate_endpoint(url, "chat")
+#    data = generate_data_for_chat(MESSAGES, model_name)
+#    response = await post_to_llm(api_endpoint, data)
+#    logging.debug(response.json())
+#    _, topic_summary = parse_response(response.json())
 
     # compare summary to existing topics
-    topic_id = compare_topics(topic_summary)
+#    topic_id = compare_topics(topic_summary)
+
+    summary_context = generate_current_topic_summary()
+    MESSAGES.append(summary_context)
+
+    topic_summary = await create_content_summary(url, MESSAGES, model_name)
+    topic_id = compare_topics_and_categories(topic_summary, Topic.select())
+
     if topic_id is None:
-        topic_id = Topic.create(text=topic_summary)
+        category_summary_context = create_context_dict("You are a publishing editor who creates tables of contents")
+        category_summary_dict = generate_category_summary(topic_summary)
+        NEW_MESSAGES = [category_summary_context, category_summary_dict]
+
+        category_summary = await create_content_summary(url, NEW_MESSAGES, model_name)
+        category_id_num = compare_topics_and_categories(category_summary, Category.select())
+
+        if category_id_num is None:            
+            category_id_num = Category.create(text=category_summary)
+        topic_id = Topic.create(text=topic_summary, category_id=category_id_num)
 
     # update topic_id for chats
     for current_chat in chat_object_list:

@@ -10,6 +10,10 @@ ADD_TOPIC_TO_CHAT = f"Create a concise topic description about the current conve
             If this is about code, include the language, framework that is discussed, or both. \
             Only crete a new topic summary if there is not an obvious match with a previous summary here: " 
 
+# creaate a category
+EXISTING_CATEGORY_TO_CHAT = "Can the topic summary be logically filed under an existing category from this list of categories? "
+CREATE_NEW_CATEGORY = "If it can, output the name of appropiate category. If it cannot not. Create a concise category name of no more than 2 words generally describing the summary." \
+"If this is a programming langage only return the language name."
 # contexts 
 EVALUTATE_CONTEXT = "You are a helpful professional, evaluating for accuracy and editing a response if necessary."
 

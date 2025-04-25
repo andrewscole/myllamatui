@@ -18,7 +18,7 @@ from textual.widgets import (
 
 from myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
 from myllamacli.ui_shared import context_choice_setup, create_topics_select
-from myllamacli.llm_models import pull_model, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
+from myllamacli.llm_models import post_action_to_model_manager, get_model_capabilities, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
 from myllamacli.ui_widgets_messages import SettingsChanged
 from myllamacli.ui_modal_screens import QuitScreen
 
@@ -219,11 +219,13 @@ class SettingsScreen(Screen):
         stored_llm_models = LLM_MODEL.select()
         logging.debug("PullModel Button Pressed")
         input = self.query_one("#ModelInput")
-    
         logging.info("pulling {}".format(input.value))
+
+        # pushes notification about screen
         self.app.push_screen(QuitScreen("Pulling Model. This might take a while."))
-        pull_text = await pull_model(self.url, str(input.value))
+        pull_text = await post_action_to_model_manager(self.url, str(input.value), "pull")
         logging.debug(pull_text.text)
+        # pops it
         self.app.pop_screen()
 
         if "success" in pull_text.text:
@@ -243,7 +245,7 @@ class SettingsScreen(Screen):
                 to_replace = LLM_MODEL.get(LLM_MODEL.model == "Temp_fake")
                 new_model = model_list["models"][0]
                 to_replace.model = new_model["model"]
-                to_replace.specialization = "General"
+                to_replace.specialization = await get_model_capabilities(self.url, str(new_model["model"]))
                 to_replace.size = new_model["size"]
                 to_replace.currently_available = True
                 to_replace.save()
@@ -268,7 +270,7 @@ class SettingsScreen(Screen):
                 newmodel = LLM_MODEL.get_by_id(num_of_models)
                 download_date = str(newmodel.modified_at).split(" ")[0]
                 logging.debug(download_date)
-                table.add_row(str(newmodel.model), str(newmodel.currently_available), str(newmodel.size), str(download_date), int(0), key=f"R{str(table.row_count)}")
+                table.add_row(str(newmodel.model), str(newmodel.currently_available), str(newmodel.specialization), str(newmodel.size), str(download_date), int(0), key=f"R{str(table.row_count)}")
 
             # finally send text to update the select on the main window
             self.dbmodels["model_changed"] = "True"
@@ -286,6 +288,7 @@ class SettingsScreen(Screen):
         
         model_list = [model.model for model in LLM_MODEL.select() if model.currently_available == True]
         selection = str(event.value)
+        logging.info(selection)
         
         if f'{selection}' in model_list:
             self.query_one("#model_to_delete_label").update(f"To Delete: {selection}")

@@ -32,7 +32,7 @@ from myllamacli.chats import (
     resume_previous_chats_ui,
     save_chat,
 )
-from myllamacli.topics_contexts import generate_current_topic_summary
+from myllamacli.topics_contexts_categories import generate_current_topic_summary
 
 from myllamacli.ui_shared import model_choice_setup, context_choice_setup
 from myllamacli.ui_widgets_messages import QuestionAsk, FileSelected, SettingsChanged
@@ -93,6 +93,7 @@ class OllamaTermApp(App):
         self.LLM_MESSAGES = []
         self.previous_messages = []
         self.chat_object_list = []
+        self.current_session_chat_object_list = []
 
         # display
         self.model_date_display_info = ""
@@ -217,15 +218,14 @@ class OllamaTermApp(App):
         for category_name in categories:
             if str(category_name.text) != "default":
                 tree_dict[str(category_name.id)] = previous_chats.add(str(category_name.text), allow_expand=True)
+        tree.root.add("Current Chat")
         tree.root.add("New Chat")
+
         
         # topic_list is a list of Topic objects
         topic_list = self.populate_tree_topic()
         for single_topic in topic_list:
             tree_dict[str(single_topic.category_id)].add(str(single_topic.text))
-
-
-
 
 
     ### this is the main wrapper for the chat ####
@@ -357,48 +357,70 @@ class OllamaTermApp(App):
         input.clear()
         self.chats_loaded = False
 
+
+    def view_previous_chats(self, label_name: str, choice_num: int) -> None:
+        """ loads previous chats """
+
+        # setup previous_chats list
+
+        if label_name == "Current Chats":
+            previous_chats = []
+            for id in self.current_session_chat_object_list:
+                chat_obj = Chat.get_by_id(id)
+                previous_chats.append(chat_obj)
+                self.chats_loaded = False
+        else:
+            previous_chats = Chat.select().where(Chat.topic_id == choice_num)
+            self.chats_loaded = True
+
+
+        # not take care of the visuals
+        chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
+
+
+        for item in chatcontainer.children:
+            item.remove()
+        previous_chat_date = ""
+        for chat in previous_chats:
+            question = chat.question
+            answer = chat.answer
+            chatdate = str(chat.created_at).split()
+            previous_chat_date = chatdate[0]
+
+            # get model id
+            llm_model = LLM_MODEL.get_by_id(chat.llm_model_id)
+
+            self.add_wdg_to_scroll(
+                question, answer, llm_model.model, previous_chat_date
+            )
+
+        reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(
+            previous_chats
+        )
+
+        # finally update on going session lists
+        self.LLM_MESSAGES = self.LLM_MESSAGES + reformatted_previous_chats
+        self.chat_object_list = list(previous_chats)
+
+
     async def on_tree_node_selected(self, event: Tree) -> None:
         """Load Old Chats in tree. If new just, save existing and clear."""
         await self.action_save()
-        choice_num = event.node.id + 1
-        logging.debug(
-            "Tree label and id selected: {0}, {1}".format(event.node.label, choice_num)
+        top_layer_offset = len(Category.select())
+        logging.info(f"categories len: {top_layer_offset}")
+        choice_num = event.node.id - top_layer_offset
+        if choice_num < 1:
+            choice_num = 0
+
+        logging.info(
+            "Tree label, id, and choice selected: {0}, {1}, {2}".format(event.node.label, event.node.id, choice_num)
         )
         if event.node.label == "New Chat":
             # reset to default topic id
             self.topic_id = 1
         else:
-            if self.chat_sort_choice == "topics":
-                previous_chats = Chat.select().where(Chat.topic_id == choice_num)
-            else:
-                # self.chat_sort_choice == "dates":
-                ##### switch this to dates #####
-                previous_chats = Chat.select().where(Chat.context_id == choice_num)
-
-            chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
-
-            for item in chatcontainer.children:
-                item.remove()
-            previous_chat_date = ""
-            for chat in previous_chats:
-                question = chat.question
-                answer = chat.answer
-                chatdate = str(chat.created_at).split()
-                previous_chat_date = chatdate[0]
-
-                # get model id
-                llm_model = LLM_MODEL.get_by_id(chat.llm_model_id)
-
-                self.add_wdg_to_scroll(
-                    question, answer, llm_model.model, previous_chat_date
-                )
-
-            reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(
-                previous_chats
-            )
-            self.LLM_MESSAGES = self.LLM_MESSAGES + reformatted_previous_chats
-            self.chat_object_list = list(previous_chats)
-            self.chats_loaded = True
+            self.view_previous_chats(event.node.label, choice_num)
+   
 
     @on(Button.Pressed, "#settings")
     def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
@@ -464,8 +486,6 @@ class OllamaTermApp(App):
             severity="information",
         )
         logging.debug(len(self.chat_object_list))
-        summary_context = generate_current_topic_summary()
-        self.LLM_MESSAGES.append(summary_context)
         await create_and_apply_chat_topic_ui(
             self.url,
             self.chat_object_list,
@@ -482,6 +502,7 @@ class OllamaTermApp(App):
             )
             await self.add_topic_to_chat()
             self.pop_screen()
+            self.current_session_chat_object_list = self.current_session_chat_object_list + self.chat_object_list
             self.chat_object_list = []
 
     async def action_quit(self) -> None:
