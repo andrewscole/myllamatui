@@ -12,7 +12,7 @@ Grid {
 
 #ContextDisplay_topbar {
     row-span: 1;
-	column-span: 6;
+	column-span: 5;
 }
 
 #ModelDisplay_topbar {
@@ -21,8 +21,8 @@ Grid {
 
 }
 
-#iterations_mainscreen {
-	column-span: 1;
+#VerificationModelSelect_topbar {
+	column-span: 2;
 	row-span: 1;
 
 }
@@ -41,9 +41,9 @@ Grid {
 }
 
 #ChatHistoryDisplay_sidebar {
-	padding: 3;
+	padding: 0 1;
 	column-span: 2;
-	row-span: 7;
+	row-span: 8;
     color:rgb(251, 251, 251);
     background: transparent;
 }

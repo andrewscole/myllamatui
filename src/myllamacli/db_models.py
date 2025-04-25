@@ -21,19 +21,21 @@ class Context(BaseModel):
     created_at = DateTimeField(default=datetime.now)
 
 
-#class Subject(BaseModel):
-#    text = TextField(unique=True)
-#    created_at = DateTimeField(default=datetime.now)
+class Category(BaseModel):
+    text = TextField(unique=True)
+    created_at = DateTimeField(default=datetime.now)
+
 
 class Topic(BaseModel):
     text = TextField(unique=True)
-#    subject_id = ForeignKeyField(Topic, backref="topics")
+    category_id = ForeignKeyField(Category, backref="topics")
     created_at = DateTimeField(default=datetime.now)
 
 
 class LLM_MODEL(BaseModel):
     model = CharField(unique=True)
     size = IntegerField()
+    specialization = TextField()
     modified_at = DateTimeField(default=datetime.now)
     currently_available = BooleanField()
 

@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict
 
 from myllamacli.db_models import Topic
+from myllamacli.prompts import ADD_TOPIC_TO_CHAT
 
 
 def create_context_dict(context_text: str) -> Dict:
@@ -14,15 +15,14 @@ def create_context_dict(context_text: str) -> Dict:
 def generate_current_topic_summary() -> List[Dict]:
     """generate message and add to list of messages for topic summary calls"""
 
-    topics = Topic.select()
-    topics_list = [topic.text for topic in topics]
+# get topics list
+    topic_list = [topic.text for topic in Topic.select()]
+
+    summary_specific_prompt =  f"{topic_list}."
     return {
         "role": "user",
-        "content": f"Create a concise topic description about the current conversation. \
-            Use as few words as possible, ideally 2 or 3 words. \
-            This should be concise like a bullet point in presentiation, but should contain no symbols. \
-            Only crete a new topic summary if there is not an obvious match with a previous summary here: {topics_list}. \
-            If this is about code, include the language, framework that is discussed, or both."
+        "content": ADD_TOPIC_TO_CHAT + summary_specific_prompt
+
     }
 
 

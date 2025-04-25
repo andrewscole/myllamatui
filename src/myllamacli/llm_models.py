@@ -64,6 +64,7 @@ def add_model_if_not_present(ollama_list: List, stored_llm_models: List) -> None
         else:
             LLM_MODEL.get_or_create(
                 model=existing_model["model"],
+                specialization = "General",
                 size=existing_model["size"],
                 currently_available=True,
             )

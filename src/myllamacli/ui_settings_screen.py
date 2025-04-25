@@ -123,7 +123,7 @@ class SettingsScreen(Screen):
     def models_datatable(self):
         all_models = LLM_MODEL.select()
         table = DataTable(id="models_data_table")
-        tbl_columns = {"Name": "name", "Currently Available": "available", "Size":"size", "Download Date": "date", "Number of Chats": "used"}
+        tbl_columns = {"Name": "name", "Currently Available": "available", "Specialization": "specialization", "Size":"size", "Download Date": "date", "Number of Chats": "used"}
         for item in tbl_columns:
             table.add_column(item, key=tbl_columns[item])        
         count = 0
@@ -132,7 +132,7 @@ class SettingsScreen(Screen):
             model_usage = Chat.select().where(Chat.llm_model_id == model.id).count()
             download_date = str(model.modified_at).split(" ")[0]
             logging.debug(download_date)
-            table.add_row(str(model.model), str(model.currently_available), str(model.size), str(download_date), int(model_usage),key=f"R{str(count)}")
+            table.add_row(str(model.model), str(model.currently_available), str(model.specialization), str(model.size), str(download_date), int(model_usage),key=f"R{str(count)}")
             count += 1
         table.zebra_stripes = True
         table.fixed_columns = 1
@@ -243,6 +243,7 @@ class SettingsScreen(Screen):
                 to_replace = LLM_MODEL.get(LLM_MODEL.model == "Temp_fake")
                 new_model = model_list["models"][0]
                 to_replace.model = new_model["model"]
+                to_replace.specialization = "General"
                 to_replace.size = new_model["size"]
                 to_replace.currently_available = True
                 to_replace.save()
