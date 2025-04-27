@@ -6,6 +6,7 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import (
     Button,
+    Checkbox,
     DirectoryTree,
     Input,
     Label,
@@ -34,7 +35,7 @@ class FilePathScreen(Screen):
         self.input_class = input_class
         self.isdir = is_directory
         self.chat_object_list = chat_object_list
-
+        self.show_hidden = True
 
     def compose(self) -> ComposeResult:
         if self.input_class == "hidden":
@@ -47,7 +48,8 @@ class FilePathScreen(Screen):
         yield Button("Close Settings", id="CloseTree", variant="primary")
         yield Static("\n")
         yield Label(dtlbl, id="dtreelabel")
-        yield DirectoryTree(path=parse_export_path("~", True), id="dirtree")
+        yield Checkbox("show hidden files?", value=False)
+        yield DirectoryTree(path=parse_export_path("~", True), id="dirtree")      
         yield Input(
             placeholder="Enter file name",
             id="FilePathInput",
@@ -59,13 +61,25 @@ class FilePathScreen(Screen):
         yield Button("Submit Path", id="submitpath", variant="primary", classes=self.input_class)
 
 
+    def on_mount(self) -> None:
+        tree = self.query_one("#dirtree")
+        tree.show_hidden = False
+
+
     @on(Button.Pressed, "#CloseTree")
     def close_file_screen(self, event: Button.Pressed) -> None:
         """ Handle buttons in close button in file screen."""
         logging.debug("CloseTree")
         self.dismiss()
-    
-    
+
+    @on(Checkbox.Changed)
+    def checkbox_changed(self, event: Checkbox.Changed) -> None:
+        self.show_hidden = event.value
+        tree = self.query_one(DirectoryTree)
+        tree.show_hidden = self.show_hidden
+
+
+
     @on(Button.Pressed, "#submitpath")
     def submit_path_screen(self, event: Button.Pressed) -> None:
         """ Handle buttons in filepath screen."""

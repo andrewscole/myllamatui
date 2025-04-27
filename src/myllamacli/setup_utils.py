@@ -38,12 +38,12 @@ async def setup_db_and_initialize_defaults() -> None:
     for context_text in contexts_list:
         context_id = Context.create(text=context_text)
 
-    category_list = ["default", "Jokes", "Python Coding", "Ruby Coding", "General Trivia", "Historical Figures"]
+    category_list = ["default", "Jokes", "Python", "Ruby", "General Trivia", "Historical Figures"]
     for category_text in category_list:
         Category.create(text=category_text)
 
 
-    topic_dict = {"default": "1", "Dad Jokes": "2", "Python Textual Tests": "3"}
+    topic_dict = {"default": "1", "Dad Jokes": "2", "Python Textual": "3"}
     for topic_key in topic_dict.keys():
         Topic.create(text=topic_key, category_id=topic_dict[topic_key] )
 

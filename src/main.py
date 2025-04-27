@@ -269,7 +269,7 @@ class OllamaTermApp(App):
     @on(Select.Changed, "#ContextDisplay_topbar")
     def context_select_changed(self, event: Select.Changed) -> None:
         """Get Selection from Context select box."""
-        logging.debug("context_choice:{}".format(event))
+        logging.info("context_choice:{}".format(event))
         self.context_choice_id = str(event.value)
         context_obj = Context.get_by_id(str(event.value))
         context_text = context_obj.text
@@ -459,7 +459,7 @@ class OllamaTermApp(App):
             # self.query_one("#ContextDisplay_topbar").set_options(model_choice_setup())
             self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
 
-        if message.topic_changed != "":
+        if message.topic_changed != "" or message.category_changed != "":
             logging.info("topic")
             self.query_one("#ChatHistoryDisplay_sidebar").clear
 

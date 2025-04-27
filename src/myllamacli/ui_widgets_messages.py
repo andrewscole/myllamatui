@@ -1,5 +1,8 @@
 import logging
 
+from pathlib import Path
+from typing import Iterable
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import HorizontalGroup
@@ -7,6 +10,7 @@ from textual.message import Message
 from textual.widgets import (
     Button,
     Input,
+    DirectoryTree
 )
 
 from peewee import *
@@ -20,9 +24,10 @@ class FileSelected(Message):
 
 
 class SettingsChanged(Message):
-    def __init__(self, context_changed: str, topic_changed: str, model_changed: str, url_changed: str):
+    def __init__(self, context_changed: str, category_changed: str, topic_changed: str, model_changed: str, url_changed: str):
         super().__init__()
         self.context_changed = context_changed
+        self.category_changed = category_changed
         self.topic_changed = topic_changed
         self.model_changed = model_changed
         self.url_changed = url_changed

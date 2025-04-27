@@ -5,6 +5,7 @@ from datetime import datetime
 from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
+from textual.containers import Horizontal
 from textual.widgets import (
     Button,
     DataTable,
@@ -16,8 +17,8 @@ from textual.widgets import (
     TabPane,
 )
 
-from myllamacli.db_models import LLM_MODEL, Chat, Context, Topic, CLI_Settings
-from myllamacli.ui_shared import context_choice_setup, create_topics_select
+from myllamacli.db_models import LLM_MODEL, Chat, Category, Context, Topic, CLI_Settings
+from myllamacli.ui_shared import context_choice_setup, topics_choice_setup, category_choice_setup
 from myllamacli.llm_models import post_action_to_model_manager, get_model_capabilities, get_raw_model_list, add_model_if_not_present, align_db_and_ollama, delete_llm_model
 from myllamacli.ui_widgets_messages import SettingsChanged
 from myllamacli.ui_modal_screens import QuitScreen
@@ -30,7 +31,7 @@ class SettingsScreen(Screen):
         self.close_message = ""
         self.model_to_delete = ""
 
-        self.dbmodels = {"model_changed": "", "topic_changed": "", "context_changed": "", "url_changed": ""}
+        self.dbmodels = {"model_changed": "", "category_changed": "", "topic_changed": "", "context_changed": "", "url_changed": ""}
         self.url = url
 
     def compose(self) -> ComposeResult:
@@ -76,29 +77,44 @@ class SettingsScreen(Screen):
                     classes="cssquestion_text",
                 )
                 yield Button("Update Context", id="EditContext", variant="success")
-
-            with TabPane("Edit Topics", id="EditTopics"):
-
+                
+            with TabPane("Edit Categories", id="EditCategories"):
                 # new topic
                 yield Static("\n\n")
-                yield Label("Add New Topic")
+                yield Label("Add New or Edit Exising Category")
                 yield Input(
-                    placeholder="Add New Topic Here",
-                    id="NewTopicInput",
+                    placeholder="Add New or Edit Exiting Category Here",
+                    id="NewOrEditCategoryInput",
                     classes="cssquestion_text",
                 )
-                yield Button("Add New Topic", id="NewTopic", variant="success")
+                yield Button("Add New Category", id="NewCategory", variant="success")
 
                 yield Static("\n")
-                yield Label("Edit Existing Topic:")
+                yield Label("Edit Existing Category (use input to enter changes above):")
                 yield Select(
-                    create_topics_select(), prompt="Choose Topic:", id="TopicEditChoose"
+                    category_choice_setup(), prompt="Choose Category:", id="CategoryEditChoose"
                 )
+                yield Button("Save Category Update", id="EditCategory", variant="success")
+
+            with TabPane("Edit Topics", id="EditTopics"):
+                # new topic
+                yield Static("\n\n")
+                yield Label("Add or Edit a Topic")
                 yield Input(
-                    placeholder="Update Topic Here",
-                    id="EditTopicInput",
+                    placeholder="Add New or update Existing Topic Here",
+                    id="NewOrEditTopicInput",
                     classes="cssquestion_text",
                 )
+                yield Label("Attach or chage Topic's Parent Category:")
+                yield Select(
+                        category_choice_setup(), prompt="Choose/Chage Category:", id="CategoryEditChooseTopics"
+                    )
+                yield Button("Create New Topic", id="NewTopic", variant="success")
+                yield Static("\n")
+                yield Label("Or choose a topic to Edit (input above) | Update the category:")
+                yield Select(
+                        topics_choice_setup(), prompt="Choose Topic:", id="TopicEditChoose"
+                    )
                 yield Button("Save Topic Update", id="EditTopic", variant="success")
 
             with TabPane("Edit Models", id="EditModels"):
@@ -188,13 +204,18 @@ class SettingsScreen(Screen):
     #### Topic Settings ####
     @on(Button.Pressed, "#NewTopic")
     def new_topic_button_changed(self, event: Button.Pressed) -> None:
-        input = self.query_one("#NewTopicInput")
+        input = self.query_one("#NewOrEditTopicInput")
         new_topic = input.value
-        logging.debug("New Topic created: {0}".format(new_topic))
-        Topic.create(text=str(new_topic))
-        # this isn't updating. Cannot figure out why
-        self.notify("Topic Added. Click Close Settings to return to Chat.")
-        self.dbmodels["topic_changed"] = "True"
+        category_select = self.query_one("#CategoryEditChooseTopics")
+        category_id = category_select.value
+        if category_id != Select.BLANK:
+            logging.debug("New Topic created: {0}".format(new_topic))
+            Topic.create(text=str(new_topic), category_id=category_id)
+            # this isn't updating. Cannot figure out why
+            self.notify("Topic Added. Click Close Settings to return to Chat.")
+            self.dbmodels["topic_changed"] = "True"
+        else:
+            self.notify("Unable to create topic. Please select a category.", severity="warning")
 
     @on(Button.Pressed, "#EditTopic")
     def edit_topic_button_changed(self, event: Button.Pressed) -> None:
@@ -202,14 +223,47 @@ class SettingsScreen(Screen):
         topic_id = self.query_one("#TopicEditChoose")
         logging.debug(topic_id.value)
         topic_to_change = Topic.get_by_id(topic_id.value)
-        input = self.query_one("#EditTopicInput")
+        input = self.query_one("#NewOrEditTopicInput")
         topic_text = input.value
-        logging.debug("Topic: {0} changed to: {1}".format(topic_to_change, topic_text))
-        topic_to_change.text = topic_text
+        if topic_text != "":
+            logging.debug("Topic: {0} changed to: {1}".format(topic_to_change, topic_text))
+            topic_to_change.text = topic_text
+        category_select = self.query_one("#CategoryEditChooseTopics")
+        category_id = category_select.value
+        logging.info(category_id)
+        if category_id > 0 or category_id != Select.BLANK:
+            topic_to_change.category_id = category_id
         topic_to_change.save()
         input.clear()
         self.notify("Topic Updated. Click Close Settings to return to Chat.")
         self.dbmodels["topic_changed"] = "True"
+
+ #### Category Settings ####
+    @on(Button.Pressed, "#NewCategory")
+    def new_cagegory_button_changed(self, event: Button.Pressed) -> None:
+        input = self.query_one("#NewOrEditCategoryInput")
+        new_category = input.value
+        logging.debug("New Category created: {0}".format(new_category))
+        Category.create(text=str(new_category))
+        # this isn't updating. Cannot figure out why
+        self.notify("Topic Added. Click Close Settings to return to Chat.")
+        self.dbmodels["category_changed"] = "True"
+
+    @on(Button.Pressed, "#EditCategory")
+    def edit_category_button_changed(self, event: Button.Pressed) -> None:
+        logging.debug("Edit Category Button Pressed")
+        category_id = self.query_one("#CategoryEditChoose")
+        logging.debug(category_id.value)
+        category_to_change = Category.get_by_id(category_id.value)
+        input = self.query_one("#NewOrEditCategoryInput")
+        category_text = input.value
+        logging.debug("Category: {0} changed to: {1}".format(category_to_change, category_text))
+        category_to_change.text = category_text
+        category_to_change.save()
+        input.clear()
+        self.notify("Category Updated. Click Close Settings to return to Chat.")
+        self.dbmodels["category_changed"] = "True"
+
 
     #### Model ####
     @on(Button.Pressed, "#PullModel")
@@ -360,5 +414,5 @@ class SettingsScreen(Screen):
     def close_settings_screen(self, event: Button.Pressed) -> None:
         logging.debug("CloseSetting")
         logging.debug(f"from settings {self.dbmodels}")
-        self.post_message(SettingsChanged(self.dbmodels["context_changed"], self.dbmodels["topic_changed"], self.dbmodels["model_changed"], self.dbmodels["url_changed"] ))
+        self.post_message(SettingsChanged(self.dbmodels["context_changed"], self.dbmodels["category_changed"], self.dbmodels["topic_changed"], self.dbmodels["model_changed"], self.dbmodels["url_changed"] ))
         self.dismiss()
