@@ -74,12 +74,6 @@ async def create_content_summary(url: str, MESSAGES: list, model_name: str) -> s
     _, topic_summary = parse_response(response.json())
     return topic_summary
 
-async def evaluate_summary(url: str, model_name: str ,summary: str, messages: list, items: list) -> int:
-    prompt = compare_topics_and_categories_prompt(summary, items)
-    messages.append(prompt)
-    item_choice = await create_content_summary(url, messages, model_name)
-    item_id = check_for_topic_and_category_match(item_choice, items)
-    return item_id
 
 async def create_and_apply_chat_topic_ui(url: str, 
     chat_object_list: List, MESSAGES: List, model_name: str
@@ -104,25 +98,20 @@ async def create_and_apply_chat_topic_ui(url: str,
 ########should be runnable again for category ########
     # generate a topic summary
     topic_summary = await create_content_summary(url, MESSAGES, model_name)
-    # compare summary to exisiting summaries (Needs to be seperate)
-    category_and_topic_summary_context = create_context_dict("You are a publishing editor who creates tables of contents")
-    summary_messages = [category_and_topic_summary_context]
-
-    topic_id = await evaluate_summary(url, model_name, topic_summary, summary_messages, Topic.select())
+    topic_id = check_for_topic_and_category_match(topic_summary, Topic.select())
 
     if topic_id is None:
-        # evaluate the category next
-        category_summary = await create_content_summary(url, summary_messages, model_name)
-        category_id_num = await evaluate_summary(url, model_name, category_summary, Category.select())
-
+        # You have created a new topic, now evaluate the category for this new topic anc create if needed
+        category_and_topic_summary_context = create_context_dict("You are a publishing editor who creates tables of contents")
+        prompt = compare_topics_and_categories_prompt(topic_summary, Category.select())
+        category_summary = await create_content_summary(url, [category_and_topic_summary_context, prompt], model_name)
+        category_id_num = check_for_topic_and_category_match(category_summary, Category.select())
         if category_id_num is None:            
             category_id_num = Category.create(text=category_summary)
+        #create new topic with new or exiting category id
         topic_id = Topic.create(text=topic_summary, category_id=category_id_num)
 
-
-    # not that you are done: update topic_id for chats
-    for current_chat in chat_object_list:
-        current_chat.update_chat_topic_from_summary(topic_id)
+    return topic_id
 
 def resume_previous_chats_ui(selected_chats: List) -> List:
     """Load Q and A from the DB onto the screen and setup abillity to continue the conversation."""

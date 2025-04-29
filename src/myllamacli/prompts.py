@@ -7,12 +7,13 @@ EVALUATION_QUESTION = "Evaluate the previous answer for accuracy and revise the 
 ADD_OR_APPLY_TOPIC_TO_CHAT = f"Create a concise topic description about the current conversation. \
             Use as few words as possible, ideally 2 or 3 words. \
             This should be concise like a bullet point in presentiation, but should contain no symbols. \
-            If this is about code, include the framework that is discussed."
+            If this is about code, include the framework that is discussed. If the similarity between the summary you created."
+
 
 ASSESS_SUMMARY_1 = "If the similarity between the summary here: "
 # apply to both Topic and Cetegory
 ASSESS_SUMMARY_2 = "and one of the items in the list here: "
-ASSESS_SUMMARY_3 = "is 60% or higher, output only the item in the topic list, otherwise output only the topic summary" 
+ASSESS_SUMMARY_3 = "is 60% or higher, output only the item in the topic list, otherwise output the summary you just created."
 
 # creaate a category
 EXISTING_CATEGORY_TO_CHAT = "Can the topic summary be logically filed under an existing category from this list of categories? "

@@ -14,9 +14,10 @@ def create_context_dict(context_text: str) -> Dict[str, str]:
 
 def generate_current_topic_summary() -> List[Dict[str, str]]:
     """generate message and add to list of messages for topic summary calls"""
+    topic_list = [single_topic.text for single_topic in Topic.select()]
     return {
         "role": "user",
-        "content": ADD_OR_APPLY_TOPIC_TO_CHAT
+        "content": ADD_OR_APPLY_TOPIC_TO_CHAT + ASSESS_SUMMARY_2 + f"{topic_list}"  + ASSESS_SUMMARY_2
 
     }
 

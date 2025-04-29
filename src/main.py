@@ -199,6 +199,7 @@ class OllamaTermApp(App):
                 previous_chats[topic] = chat_under_topic
         return previous_chats
 
+
     def update_tree(self):
         """Update tree with selections from the DB"""
 
@@ -256,6 +257,7 @@ class OllamaTermApp(App):
 
             # add to list for topic updates later
             self.chat_object_list.append(chat_object_id)
+            self.current_session_chat_object_list.append(chat_object_id)
 
             # display
             self.add_wdg_to_scroll(question, answer, model_name, None, str(chat_object_id.id))
@@ -291,17 +293,6 @@ class OllamaTermApp(App):
         logging.debug("Folloup Model name: {}".format(self.followup_model_choice_name))
         if int(event.value) > 0:
             self.notify("Please Note: This will make the 'Thinking' phase take at least twice as long!", severity="warning")
-
-
-    #@on(Select.Changed, "#ChatHistorySelect_topright")
-    #def sort_choice_select_changed(self, event: Select.Changed) -> None:
-    #    """Get Selection from Chat History select box."""
-
-    #    logging.debug("chathistort_choice: {}".format(event.value))
-    #    self.chat_sort_choice = str(event.value).lower()
-
-    #    # move to on_mount
-    #    self.update_tree()
 
     # submit button
     @on(Input.Submitted, "#question_text")
@@ -385,37 +376,33 @@ class OllamaTermApp(App):
 
     async def on_tree_node_selected(self, event: Tree) -> None:
         """Load Old Chats in tree. If new just, save existing and clear."""
-        await self.action_save()
-        #logging.info(f"categories len: {top_layer_offset}")
-        #choice_num = event.node.id - top_layer_offset
-        logging.info(f"Tree label, id, and choice selected: {event.node.label}")
 
+        logging.debug(f"Tree label, id, and choice selected: {event.node.label}")
         selected_subject = str(event.node.label)
         previous_chats = []
         if selected_subject == "New Chat":
-            logging.info("New Chat Selected")
-            # reset to default topic id
+            logging.debug("New Chat Selected")
+            topic = Topic.get_by_id(1)
+            save_list = Chat.select().where(Chat.topic_id == topic.id)
+            for chat in save_list:
+                logging.debug(f"new chat{chat} id {chat.topic_id}")
             self.topic_id = 1
+            await self.action_save()
+            # reset to default topic id
         elif selected_subject == "Current Chat":
-            logging.info("CURRENT CHATS")
-            logging.info(f"current session chats list {self.current_session_chat_object_list}")
             for id in self.current_session_chat_object_list:
                 chat_obj = Chat.get_by_id(id)
                 previous_chats.append(chat_obj)
                 self.chats_loaded = False
         elif selected_subject in [topic.text for topic in Topic.select()]:
             topic = Topic.get(Topic.text == selected_subject)
-            logging.info(f"topic text: {topic.text}")
-            logging.info(f"topic id: {topic.id}")
             previous_chats = Chat.select().where(Chat.topic_id == topic.id)
             self.chats_loaded = True
         else:
-            logging.info("Category Selected")
+            logging.debug("Category Selected")
 
-        if len(previous_chats) >= 1:
-            self.view_previous_chats(previous_chats)
+        self.view_previous_chats(previous_chats)
    
-
 
     @on(Button.Pressed, "#settings")
     def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
@@ -428,6 +415,7 @@ class OllamaTermApp(App):
         self.push_screen(
             IterationsScreen(self.iteration_count, self.model_info_as_string)
         )
+
 
     # Filepath and File export buttons
     @on(Button.Pressed, "#export")
@@ -474,50 +462,41 @@ class OllamaTermApp(App):
         self.query_one("#SubmitQuestion").loading = False
         self.query_one("#question_text").loading = False
 
+
     async def add_topic_to_chat(self) -> None:
         """Save a summary of the chats and quit."""
         self.notify(
             "Updating Chat Topics. This will take a few seconds.",
             severity="information",
         )
-        logging.debug(len(self.chat_object_list))
-        await create_and_apply_chat_topic_ui(
+        unparsed_chats = Chat.select().where(Chat.topic_id == 1)    
+        topic_id = await create_and_apply_chat_topic_ui(
             self.url,
             self.chat_object_list,
             self.LLM_MESSAGES,
             self.model_choice_name,
         )
+        for current_chat in unparsed_chats:
+            current_chat.update_chat_topic_from_summary(topic_id)
+
 
     async def action_save(self) -> None:
         """Save a summary of the chats and quit."""
-        if len(self.chat_object_list) > 0 and self.topic_id == 1:
+        unparsed_chats = Chat.select().where(Chat.topic_id == 1)    
+        if len(unparsed_chats) > 0 and self.topic_id == 1:
             logging.debug("saving chats")
             self.push_screen(
                 QuitScreen("Updating Chat Topics. This will take a few seconds.")
             )
             await self.add_topic_to_chat()
             self.pop_screen()
-            self.current_session_chat_object_list = self.current_session_chat_object_list + self.chat_object_list
             self.chat_object_list = []
+
 
     async def action_quit(self) -> None:
         """Save a summary of the chats and quit."""
 
-        # first catch any unparsed chats
-        unparsed_chats = Chat.select().where(Chat.topic_id == 1)
-        logging.info(len(unparsed_chats))
-        for chat in unparsed_chats:
-            logging.info(chat.id)
-            if chat not in self.chat_object_list:
-                self.chat_object_list.append(chat)
-
-        # now save and parse them if any were caught or any new chats too place.
-        if len(self.chat_object_list) > 0 and self.topic_id == 1:
-            self.push_screen(
-                QuitScreen("Updating Chat Topics. The app will exit in a few seconds.")
-            )            
-            logging.debug(len(self.chat_object_list))
-            await self.add_topic_to_chat()
+        await self.action_save()
         self.app.exit()
 
 
@@ -525,6 +504,7 @@ class OllamaTermApp(App):
         """ First time Database and inits setup here """
         if not os.path.exists(set_database_path()):
             await setup_db_and_initialize_defaults()
+
 
     def on_mount(self) -> None:
         """ start up paramaters here"""
