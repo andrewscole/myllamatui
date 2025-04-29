@@ -97,7 +97,8 @@ async def create_and_apply_chat_topic_ui(url: str,
 ############################## need to test ##############
 ########should be runnable again for category ########
     # generate a topic summary
-    topic_summary = await create_content_summary(url, MESSAGES, model_name)
+    topic_summary_raw = await create_content_summary(url, MESSAGES, model_name)
+    topic_summary = re.sub(r"[^a-zA-Z0-9\s]", '', topic_summary_raw)
     topic_id = check_for_topic_and_category_match(topic_summary, Topic.select())
 
     if topic_id is None:

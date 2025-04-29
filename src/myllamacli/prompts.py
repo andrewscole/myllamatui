@@ -6,7 +6,7 @@ EVALUATION_QUESTION = "Evaluate the previous answer for accuracy and revise the 
 #list added in  topics_coontexts
 ADD_OR_APPLY_TOPIC_TO_CHAT = f"Create a concise topic description about the current conversation. \
             Use as few words as possible, ideally 2 or 3 words. \
-            This should be concise like a bullet point in presentiation, but should contain no symbols. \
+            This should be concise like a bullet point in presentiation. Do not include any symobls. \
             If this is about code, include the framework that is discussed. If the similarity between the summary you created."
 
 
