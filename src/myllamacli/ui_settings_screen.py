@@ -116,6 +116,19 @@ class SettingsScreen(Screen):
                         topics_choice_setup(), prompt="Choose Topic:", id="TopicEditChoose"
                     )
                 yield Button("Save Topic Update", id="EditTopic", variant="success")
+            with TabPane("Reclassify Chats", id="ReclassifyChats"):
+                yield Static("\n\n")
+                yield Label("To Reclassify a chat, enter ID below, and select a topic from the list above.")
+                yield Input(
+                    placeholder="Enter Chat ID Here",
+                    id="UpdateChatTopicInput",
+                    classes="cssquestion_text",
+                )
+                yield Select(
+                        topics_choice_setup(), prompt="Choose Topic:", id="ChatTopicChoose"
+                    )
+                yield Button("Update Chat Topic", id="UpdateChatTopic", variant="primary")
+
 
             with TabPane("Edit Models", id="EditModels"):
                 yield Static("\n\n")
@@ -231,12 +244,30 @@ class SettingsScreen(Screen):
         category_select = self.query_one("#CategoryEditChooseTopics")
         category_id = category_select.value
         logging.info(category_id)
-        if category_id > 0 or category_id != Select.BLANK:
+        if int(category_id) > 0 or category_id != Select.BLANK:
             topic_to_change.category_id = category_id
         topic_to_change.save()
         input.clear()
         self.notify("Topic Updated. Click Close Settings to return to Chat.")
         self.dbmodels["topic_changed"] = "True"
+
+    @on(Button.Pressed, "#UpdateChatTopic")
+    def update_chat_button_changed(self, event: Button.Pressed) -> None:
+        input = self.query_one("#UpdateChatTopicInput")
+        chat_id = input.value
+        topic = self.query_one("#ChatTopicChoose")
+        topic_id = topic.value
+
+        if topic_id != Select.BLANK and int(chat_id) <= len(Chat.select()):
+            chat_to_update = Chat.get_by_id(chat_id)
+            chat_to_update.topic_id = topic_id
+            chat_to_update.save()
+            # this isn't updating. Cannot figure out why
+            self.notify("Chat Topic updated. Click Close Settings to return to Chat.")
+            self.dbmodels["topic_changed"] = "True"
+        else:
+            self.notify("Unable to change chat topic.", severity="warning")
+
 
  #### Category Settings ####
     @on(Button.Pressed, "#NewCategory")

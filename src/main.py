@@ -32,8 +32,6 @@ from myllamacli.chats import (
     resume_previous_chats_ui,
     save_chat,
 )
-from myllamacli.topics_contexts_categories import generate_current_topic_summary
-
 from myllamacli.ui_shared import model_choice_setup, context_choice_setup
 from myllamacli.ui_widgets_messages import QuestionAsk, FileSelected, SettingsChanged
 from myllamacli.ui_file_screen import FilePathScreen
@@ -67,7 +65,7 @@ class OllamaTermApp(App):
         ("q", "quit", "Quit"),
     ]
 
-    TITLE = "LlamaTerminal"
+    TITLE = "LlamaTerminalUI"
     SUB_TITLE = "Local UI for for accessing Ollama"
 
     def __init__(self):
@@ -75,7 +73,6 @@ class OllamaTermApp(App):
         super().__init__()
         # main window
         self.url = ""
-        self.chat_sort_choice = "topics"
         self.model_choice_id = ""
         self.model_choice_name = ""
         self.context_choice_id = ""
@@ -154,6 +151,7 @@ class OllamaTermApp(App):
         answer: str,
         model_name: str,
         previouschatdate: str,
+        chat_id: str,
     ) -> None:
         """Create and mount widgets for chat"""
         chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
@@ -164,7 +162,7 @@ class OllamaTermApp(App):
         else:
             qdate = "Today"
 
-        model_date_display_info = f"{str(model_name)} - {qdate}"
+        model_date_display_info = f"{str(model_name)} - {qdate} - chat id: {chat_id}"
 
         # mount to chat container
         if question != EVALUATION_QUESTION:
@@ -175,7 +173,7 @@ class OllamaTermApp(App):
 
 
         if model_date_display_info != self.model_date_display_info:
-            self.model_date_display_info = f"{str(model_name)} - {qdate}"
+            self.model_date_display_info = f"{str(model_name)} - {qdate} - chat id: {chat_id}"
 
         chatcontainer.mount(Label(self.model_date_display_info, classes="cssdate"))
         chatcontainer.mount(question_container)
@@ -205,7 +203,6 @@ class OllamaTermApp(App):
         """Update tree with selections from the DB"""
 
         tree = self.query_one(Tree)
-        logging.info("sort choice: {}".format(self.chat_sort_choice))
         tree = self.query_one(Tree)
         tree.clear()
         previous_chats = tree.root.expand()
@@ -261,7 +258,7 @@ class OllamaTermApp(App):
             self.chat_object_list.append(chat_object_id)
 
             # display
-            self.add_wdg_to_scroll(question, answer, model_name, None)
+            self.add_wdg_to_scroll(question, answer, model_name, None, str(chat_object_id.id))
 
     #################################
     ##### ACTIONS | Main Window #####
@@ -296,15 +293,15 @@ class OllamaTermApp(App):
             self.notify("Please Note: This will make the 'Thinking' phase take at least twice as long!", severity="warning")
 
 
-    @on(Select.Changed, "#ChatHistorySelect_topright")
-    def sort_choice_select_changed(self, event: Select.Changed) -> None:
-        """Get Selection from Chat History select box."""
+    #@on(Select.Changed, "#ChatHistorySelect_topright")
+    #def sort_choice_select_changed(self, event: Select.Changed) -> None:
+    #    """Get Selection from Chat History select box."""
 
-        logging.debug("chathistort_choice: {}".format(event.value))
-        self.chat_sort_choice = str(event.value).lower()
+    #    logging.debug("chathistort_choice: {}".format(event.value))
+    #    self.chat_sort_choice = str(event.value).lower()
 
-        # move to on_mount
-        self.update_tree()
+    #    # move to on_mount
+    #    self.update_tree()
 
     # submit button
     @on(Input.Submitted, "#question_text")
@@ -358,32 +355,15 @@ class OllamaTermApp(App):
         self.chats_loaded = False
 
 
-    def view_previous_chats(self, label_name: str, choice_num: int) -> None:
+    def view_previous_chats(self, previous_chats: list) -> None:
         """ loads previous chats """
 
-        # setup previous_chats list
-
-        if label_name == "Current Chats":
-            previous_chats = []
-            for id in self.current_session_chat_object_list:
-                chat_obj = Chat.get_by_id(id)
-                previous_chats.append(chat_obj)
-                self.chats_loaded = False
-        else:
-            previous_chats = Chat.select().where(Chat.topic_id == choice_num)
-            self.chats_loaded = True
-
-
-        # not take care of the visuals
         chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
-
 
         for item in chatcontainer.children:
             item.remove()
         previous_chat_date = ""
         for chat in previous_chats:
-            question = chat.question
-            answer = chat.answer
             chatdate = str(chat.created_at).split()
             previous_chat_date = chatdate[0]
 
@@ -391,7 +371,7 @@ class OllamaTermApp(App):
             llm_model = LLM_MODEL.get_by_id(chat.llm_model_id)
 
             self.add_wdg_to_scroll(
-                question, answer, llm_model.model, previous_chat_date
+                chat.question, chat.answer, llm_model.model, previous_chat_date, str(chat.id)
             )
 
         reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(
@@ -406,21 +386,36 @@ class OllamaTermApp(App):
     async def on_tree_node_selected(self, event: Tree) -> None:
         """Load Old Chats in tree. If new just, save existing and clear."""
         await self.action_save()
-        top_layer_offset = len(Category.select())
-        logging.info(f"categories len: {top_layer_offset}")
-        choice_num = event.node.id - top_layer_offset
-        if choice_num < 1:
-            choice_num = 0
+        #logging.info(f"categories len: {top_layer_offset}")
+        #choice_num = event.node.id - top_layer_offset
+        logging.info(f"Tree label, id, and choice selected: {event.node.label}")
 
-        logging.info(
-            "Tree label, id, and choice selected: {0}, {1}, {2}".format(event.node.label, event.node.id, choice_num)
-        )
-        if event.node.label == "New Chat":
+        selected_subject = str(event.node.label)
+        previous_chats = []
+        if selected_subject == "New Chat":
+            logging.info("New Chat Selected")
             # reset to default topic id
             self.topic_id = 1
+        elif selected_subject == "Current Chat":
+            logging.info("CURRENT CHATS")
+            logging.info(f"current session chats list {self.current_session_chat_object_list}")
+            for id in self.current_session_chat_object_list:
+                chat_obj = Chat.get_by_id(id)
+                previous_chats.append(chat_obj)
+                self.chats_loaded = False
+        elif selected_subject in [topic.text for topic in Topic.select()]:
+            topic = Topic.get(Topic.text == selected_subject)
+            logging.info(f"topic text: {topic.text}")
+            logging.info(f"topic id: {topic.id}")
+            previous_chats = Chat.select().where(Chat.topic_id == topic.id)
+            self.chats_loaded = True
         else:
-            self.view_previous_chats(event.node.label, choice_num)
+            logging.info("Category Selected")
+
+        if len(previous_chats) >= 1:
+            self.view_previous_chats(previous_chats)
    
+
 
     @on(Button.Pressed, "#settings")
     def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
@@ -507,10 +502,20 @@ class OllamaTermApp(App):
 
     async def action_quit(self) -> None:
         """Save a summary of the chats and quit."""
+
+        # first catch any unparsed chats
+        unparsed_chats = Chat.select().where(Chat.topic_id == 1)
+        logging.info(len(unparsed_chats))
+        for chat in unparsed_chats:
+            logging.info(chat.id)
+            if chat not in self.chat_object_list:
+                self.chat_object_list.append(chat)
+
+        # now save and parse them if any were caught or any new chats too place.
         if len(self.chat_object_list) > 0 and self.topic_id == 1:
             self.push_screen(
                 QuitScreen("Updating Chat Topics. The app will exit in a few seconds.")
-            )
+            )            
             logging.debug(len(self.chat_object_list))
             await self.add_topic_to_chat()
         self.app.exit()

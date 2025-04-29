@@ -69,6 +69,7 @@ async def post_to_llm(API_ENDPOINT: str, data: dict) -> httpx.Response:
     logging.debug(API_ENDPOINT)
     logging.debug(data)
 
+    logging.info(f"Posting to API_ENDPOINT" )
 
     async with httpx.AsyncClient() as client:
 
@@ -77,7 +78,7 @@ async def post_to_llm(API_ENDPOINT: str, data: dict) -> httpx.Response:
         if response.status_code != 200:
             logging.error("Call failed")
 
-        logging.debug("Call made, generating response")
+        logging.info("Call made, generating response")
         logging.debug(response)
 
         return response

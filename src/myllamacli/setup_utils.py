@@ -38,7 +38,7 @@ async def setup_db_and_initialize_defaults() -> None:
     for context_text in contexts_list:
         context_id = Context.create(text=context_text)
 
-    category_list = ["default", "Jokes", "Python", "Ruby", "General Trivia", "Historical Figures"]
+    category_list = ["default", "Jokes", "Python", "Ruby", "Software Design", "AWS", "Historical Figures"]
     for category_text in category_list:
         Category.create(text=category_text)
 

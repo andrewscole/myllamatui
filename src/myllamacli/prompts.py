@@ -4,11 +4,15 @@ ACURATE_RESPONSE = "The previous response was accurate."
 EVALUATION_QUESTION = "Evaluate the previous answer for accuracy and revise the if necessary. If the previous answer largely correct and you do have not substantive revisions, please respond with: " + ACURATE_RESPONSE + " " + DO_NOT_MAKEUP
 
 #list added in  topics_coontexts
-ADD_TOPIC_TO_CHAT = f"Create a concise topic description about the current conversation. \
+ADD_OR_APPLY_TOPIC_TO_CHAT = f"Create a concise topic description about the current conversation. \
             Use as few words as possible, ideally 2 or 3 words. \
             This should be concise like a bullet point in presentiation, but should contain no symbols. \
-            If this is about code, include the language, framework that is discussed, or both. \
-            Only crete a new topic summary if there is not an obvious match with a previous summary here: " 
+            If this is about code, include the framework that is discussed."
+
+ASSESS_SUMMARY_1 = "If the similarity between the summary here: "
+# apply to both Topic and Cetegory
+ASSESS_SUMMARY_2 = "and one of the items in the list here: "
+ASSESS_SUMMARY_3 = "is 60% or higher, output only the item in the topic list, otherwise output only the topic summary" 
 
 # creaate a category
 EXISTING_CATEGORY_TO_CHAT = "Can the topic summary be logically filed under an existing category from this list of categories? "

@@ -9,7 +9,7 @@ from peewee import fn
 from typing import List, Dict, Tuple
 
 from myllamacli.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
-from myllamacli.topics_contexts_categories import compare_topics_and_categories, compare_topics, create_context_dict, generate_current_topic_summary, generate_category_summary
+from myllamacli.topics_contexts_categories import compare_topics_and_categories_prompt, check_for_topic_and_category_match, create_context_dict, generate_current_topic_summary, generate_category_summary
 from myllamacli.llm_calls import (
     generate_endpoint,
     generate_data_for_chat,
@@ -74,6 +74,12 @@ async def create_content_summary(url: str, MESSAGES: list, model_name: str) -> s
     _, topic_summary = parse_response(response.json())
     return topic_summary
 
+async def evaluate_summary(url: str, model_name: str ,summary: str, messages: list, items: list) -> int:
+    prompt = compare_topics_and_categories_prompt(summary, items)
+    messages.append(prompt)
+    item_choice = await create_content_summary(url, messages, model_name)
+    item_id = check_for_topic_and_category_match(item_choice, items)
+    return item_id
 
 async def create_and_apply_chat_topic_ui(url: str, 
     chat_object_list: List, MESSAGES: List, model_name: str
@@ -93,22 +99,28 @@ async def create_and_apply_chat_topic_ui(url: str,
     summary_context = generate_current_topic_summary()
     MESSAGES.append(summary_context)
 
+
+############################## need to test ##############
+########should be runnable again for category ########
+    # generate a topic summary
     topic_summary = await create_content_summary(url, MESSAGES, model_name)
-    topic_id = compare_topics_and_categories(topic_summary, Topic.select())
+    # compare summary to exisiting summaries (Needs to be seperate)
+    category_and_topic_summary_context = create_context_dict("You are a publishing editor who creates tables of contents")
+    summary_messages = [category_and_topic_summary_context]
+
+    topic_id = await evaluate_summary(url, model_name, topic_summary, summary_messages, Topic.select())
 
     if topic_id is None:
-        category_summary_context = create_context_dict("You are a publishing editor who creates tables of contents")
-        category_summary_dict = generate_category_summary(topic_summary)
-        NEW_MESSAGES = [category_summary_context, category_summary_dict]
-
-        category_summary = await create_content_summary(url, NEW_MESSAGES, model_name)
-        category_id_num = compare_topics_and_categories(category_summary, Category.select())
+        # evaluate the category next
+        category_summary = await create_content_summary(url, summary_messages, model_name)
+        category_id_num = await evaluate_summary(url, model_name, category_summary, Category.select())
 
         if category_id_num is None:            
             category_id_num = Category.create(text=category_summary)
         topic_id = Topic.create(text=topic_summary, category_id=category_id_num)
 
-    # update topic_id for chats
+
+    # not that you are done: update topic_id for chats
     for current_chat in chat_object_list:
         current_chat.update_chat_topic_from_summary(topic_id)
 

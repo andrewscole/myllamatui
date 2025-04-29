@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Optional
 
 from myllamacli.db_models import Topic, Category
-from myllamacli.prompts import ADD_TOPIC_TO_CHAT, EXISTING_CATEGORY_TO_CHAT,CREATE_NEW_CATEGORY
+from myllamacli.prompts import ADD_OR_APPLY_TOPIC_TO_CHAT, ASSESS_SUMMARY_1, ASSESS_SUMMARY_2, ASSESS_SUMMARY_3, EXISTING_CATEGORY_TO_CHAT,CREATE_NEW_CATEGORY
 
 
 def create_context_dict(context_text: str) -> Dict[str, str]:
@@ -14,14 +14,9 @@ def create_context_dict(context_text: str) -> Dict[str, str]:
 
 def generate_current_topic_summary() -> List[Dict[str, str]]:
     """generate message and add to list of messages for topic summary calls"""
-
-# get topics list
-    topic_list = [topic.text for topic in Topic.select()]
-
-    summary_specific_prompt =  f"{topic_list}."
     return {
         "role": "user",
-        "content": ADD_TOPIC_TO_CHAT + summary_specific_prompt
+        "content": ADD_OR_APPLY_TOPIC_TO_CHAT
 
     }
 
@@ -41,33 +36,33 @@ def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
     }
 
 
-def get_topic_list() -> None:
-    """get and print a list of topics"""
-
-    topics = Topic.select()
-    for topic in topics:
-        generic_print_object(topic)
-
-
-def compare_topics(summary: str) -> Optional[int]:
+#### NOTE I CAHGED THIS
+def compare_topics_and_categories_prompt(summary: str, item_list: list) -> Optional[int]:
     """compare llm generated summary to existing summaries and return mach id or None"""
-    match = None
-    topics = Topic.select()
-    words = summary.split(" ")
-    summarywords = [
-        word
-        for word in words
-        if word.lower()
-        not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that"]
-    ]
-    for word in summarywords:
-        for topic in topics:
-            if word.lower() in topic.text.lower():
-                match = topic.id  # topic_id
-    return match
+    item_text_list = [item.text for item in item_list]
+    compliation_prompt = ASSESS_SUMMARY_1 + summary + ASSESS_SUMMARY_2 + f"{item_list}." + ASSESS_SUMMARY_3
+    return {
+        "role": "user",
+        "content": compliation_prompt
+    }    
+
+    #match = None
+    #topics = Topic.select()
+    #words = summary.split(" ")
+    #summarywords = [
+    #    word
+    #    for word in words
+    #    if word.lower()
+    #    not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that"]
+    #]
+    #for word in summarywords:
+    #    for topic in topics:
+    ##        if word.lower() in topic.text.lower():
+    #            match = topic.id  # topic_id
+    #return match
 
 
-def compare_topics_and_categories(summary: str, items: list) -> Optional[int]:
+def check_for_topic_and_category_match(summary: str, items: list) -> Optional[int]:
     """compare llm generated summary to existing summaries and return mach id or None"""
     match = None
     words = summary.split(" ")

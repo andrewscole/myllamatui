@@ -64,7 +64,7 @@ class FilePathScreen(Screen):
     def on_mount(self) -> None:
         tree = self.query_one("#dirtree")
         tree.show_hidden = False
-
+        
 
     @on(Button.Pressed, "#CloseTree")
     def close_file_screen(self, event: Button.Pressed) -> None:
