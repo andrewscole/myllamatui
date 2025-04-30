@@ -38,8 +38,18 @@ async def chat_with_llm_UI(url: str,
     """ take question, context, messages, modelname and file parse for api call and return answer and messages"""
 
     if file != "":
-        file_input = open_file(file)
-        question = f"{question}. Here is my file: {file_input}"
+        if os.path.isdir(file):
+            all_files = []
+            files_in_dir = os.listdir(file)
+            if len(files_in_dir) > 10:
+                self.notify("Please note, this directory has more than 10 files. This could take a while")
+            for f in files_in_dir: 
+                file_input = open_file(file + "/" + str(f))
+                all_files.append(file_input)
+            question = f"{question}. Here are my files: {file_input}"
+        else:
+            file_input = open_file(file)
+            question = f"{question}. Here is my file: {file_input}"
         file = False
 
 
@@ -93,9 +103,6 @@ async def create_and_apply_chat_topic_ui(url: str,
     summary_context = generate_current_topic_summary()
     MESSAGES.append(summary_context)
 
-
-############################## need to test ##############
-########should be runnable again for category ########
     # generate a topic summary
     topic_summary_raw = await create_content_summary(url, MESSAGES, model_name)
     topic_summary = re.sub(r"[^a-zA-Z0-9\s]", '', topic_summary_raw)

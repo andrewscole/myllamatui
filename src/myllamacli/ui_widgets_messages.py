@@ -13,8 +13,6 @@ from textual.widgets import (
     DirectoryTree
 )
 
-from peewee import *
-
 
 # message classes
 class FileSelected(Message):
@@ -32,7 +30,19 @@ class SettingsChanged(Message):
         self.model_changed = model_changed
         self.url_changed = url_changed
 
+
 # widgets
+class FilteredDirectoryTree(DirectoryTree):
+    def __init__(self, path: Path, show_hidden: bool = False, **kwargs):
+        super().__init__(path, **kwargs)
+        self.show_hidden = show_hidden
+
+    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
+        if self.show_hidden:
+            return paths
+        return [path for path in paths if not path.name.startswith(".")]
+
+
 class QuestionAsk(HorizontalGroup):
     """Horizontal widiget group for asking questions."""
 

@@ -38,7 +38,7 @@ def export_text_file(export_path: str, chats: list) -> None:
 def export_code_file(export_path: str, chats: list) -> None:
     """Export code sections to individual files."""
 
-    logging.info(
+    logging.debug(
         "This exports code only. To capture the entire chat, print to chat.\nThis will only export matches longer than 7 lines."
     )
     match_dict = {
@@ -69,14 +69,13 @@ def export_code_file(export_path: str, chats: list) -> None:
         logging.info("creating: {0}".format(export_path))
         os.mkdir(export_path)
 
-    logging.info("length of chats: {0}".format(len(chats)))
-    logging.info(chats[0].id)
+    logging.debug("length of chats: {0}".format(len(chats)))
+    logging.debug(chats[0].id)
     for i in range(0, len(chats)):
         chat = chats[i]
-        logging.info(chat)
         file_count = 1
         #single_chat = chat.answer
-        #logging.info(single_chat)
+        logging.debug("chat {i}")
         # each comlete occurance will be broken in to a item in list
         pattern = re.compile(r"```\w.*?```", re.MULTILINE | re.DOTALL)
         matches = re.findall(pattern, chat.answer)
@@ -92,8 +91,8 @@ def export_code_file(export_path: str, chats: list) -> None:
                 # if more than 8 match the type and create file names
                 for language_match in match_dict.keys():
                     if language_match in lines[0]:
-                        ### SO right now this finds the file type. It could be smarter about the name.
-                        file_name = f"file_{file_count}{match_dict[language_match]}"
+                        ### opted to export by relativechat
+                        file_name = f"chat{i + 1}_file{file_count}{match_dict[language_match]}"
                         file_path = export_path + "/" + file_name
                 # write the "files that represent lines here by writing each individual line"
                 with open(file_path, "w") as file:
@@ -111,14 +110,9 @@ def export_chat_as_file_ui(export_path: str, chats: List, code_only: bool) -> No
     if code_only == True:
         file_type = "code"
 
-    # ensure path
-    if export_path is None:
-        export_path = input(
-            "Enter the /path/file to export your chats as text. Use folder only for code: "
-        )
     export_path = parse_export_path(export_path, code_only)
 
-    logging.info(export_path)
+    logging.debug(export_path)
     
     # try to write files to path
     try:
@@ -128,13 +122,13 @@ def export_chat_as_file_ui(export_path: str, chats: List, code_only: bool) -> No
                 logging.info("Exporting Text file")
                 export_text_file(export_path, chats)
             case "code":
-                logging.info("chat len {}".format(len(chats)))
-                logging.info("Exporting text_and_code file")
+                logging.debug("chat len {}".format(len(chats)))
+                logging.info("Exporting code files only")
                 export_code_file(export_path, chats)
 
     except PermissionError:
-        logging.info(f"Error: Permission denied for {export_path}'.")
+        logging.warning(f"Error: Permission denied for {export_path}'.")
     except FileNotFoundError:
-         logging.info(f"Error: The path '{export_path}' cannot be created.")
+         logging.warning(f"Error: The path '{export_path}' cannot be created.")
     except Exception as e:
-         logging.info(f"Unexpected error: {e}")
+         logging.warning(f"Unexpected error: {e}")

@@ -84,7 +84,6 @@ class OllamaTermApp(App):
 
         # Files
         self.file_path = ""
-        self.directory_path = False
 
         # chats
         self.LLM_MESSAGES = []
@@ -424,15 +423,15 @@ class OllamaTermApp(App):
         """Handle File buttons in the Main Window"""
         if event.button.id == "filepathbutton":
             logging.debug("filepathbutton")
-            self.push_screen(FilePathScreen("hidden", self.chat_object_list, False))
+            self.push_screen(FilePathScreen(True, self.chat_object_list))
 
         elif event.button.id == "export":
             logging.debug("export")
-            self.push_screen(FilePathScreen("visible", self.chat_object_list, True))
+            self.push_screen(FilePathScreen(False, self.chat_object_list))
 
     def on_file_selected(self, message: FileSelected) -> None:
         self.file_path = message.path
-        logging.info(self.file_path)
+        logging.debug(f"File Screen Path: {self.file_path}")
 
     def on_settings_changed(self, message: SettingsChanged) -> None:
         logging.info(message.url_changed)
