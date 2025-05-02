@@ -1,7 +1,7 @@
 [project]
 name = "myllamacli"
 version = "0.0.1"
-description = "A CLI application that interfaces with ollama and allows you to store and acces chats"
+description = "A terminal ui application that interfaces with ollama and allows you to chat with an LLM, store and acces chats and see some model information"
 readme = "README.md"
 authors = [{ name = "Andrew Cole", email = "376180+andrewscole@users.noreply.github.com" }]
 
@@ -15,9 +15,9 @@ classifiers = [
 
 dependencies = [
     "peewee",
-    "requests",
-    "click",
-    "mypy"
+    "textual",
+    "httpx",
+    "mypy",
 ]
 
 [dependency-groups]
