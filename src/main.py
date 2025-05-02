@@ -32,9 +32,17 @@ from myllamacli.chats import (
     resume_previous_chats_ui,
     save_chat,
 )
-from myllamacli.import_export_files import open_files_and_add_to_question, check_file_type
+from myllamacli.import_export_files import (
+    open_files_and_add_to_question,
+    check_file_type,
+)
 from myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from myllamacli.ui_widgets_messages import QuestionAsk, FileSelected, SettingsChanged, SupportNotifyRequest
+from myllamacli.ui_widgets_messages import (
+    QuestionAsk,
+    FileSelected,
+    SettingsChanged,
+    SupportNotifyRequest,
+)
 from myllamacli.ui_file_screen import FilePathScreen
 from myllamacli.ui_settings_screen import SettingsScreen
 from myllamacli.ui_modal_screens import QuitScreen
@@ -100,7 +108,6 @@ class OllamaTermApp(App):
         self.context_switcher_file_or_export = ""
         self.model_to_delete = ""
 
-
     ######## GUI ##########
     def compose(self) -> ComposeResult:
         """setup GUI for Application."""
@@ -130,11 +137,11 @@ class OllamaTermApp(App):
                 id="VerificationModelSelect_topbar",
             )
             yield VerticalScroll(id="CurrentChant_MainChatWindow")
-            #yield Select(
+            # yield Select(
             #    iter((sort_choice, sort_choice) for sort_choice in ["Topics", "Dates"]),
             #    prompt="Sort Chats By:",
             #    id="ChatHistorySelect_topright",
-            #)
+            # )
             yield Tree("Previous Chats", id="ChatHistoryDisplay_sidebar")
             yield QuestionAsk(id="QuestionAsk_bottombar")
             yield Button("Add File", id="filepathbutton", variant="primary")
@@ -171,9 +178,10 @@ class OllamaTermApp(App):
         else:
             question_container = Markdown("Evaluation:", classes="cssquestion")
 
-
         if model_date_display_info != self.model_date_display_info:
-            self.model_date_display_info = f"{str(model_name)} - {qdate} - chat id: {chat_id}"
+            self.model_date_display_info = (
+                f"{str(model_name)} - {qdate} - chat id: {chat_id}"
+            )
 
         chatcontainer.mount(Label(self.model_date_display_info, classes="cssdate"))
         chatcontainer.mount(question_container)
@@ -190,7 +198,7 @@ class OllamaTermApp(App):
         mounted_markdowns.remove()
 
     def populate_tree_topic(self) -> Dict:
-        """ create a dict of {topic object : [list of chats under topic]}"""
+        """create a dict of {topic object : [list of chats under topic]}"""
         previous_chats = {}
         topics = Topic.select()
         for topic in topics:
@@ -199,7 +207,6 @@ class OllamaTermApp(App):
                 previous_chats[topic] = chat_under_topic
         return previous_chats
 
-
     def update_tree(self) -> None:
         """Update tree with selections from the DB"""
 
@@ -207,24 +214,24 @@ class OllamaTermApp(App):
         tree = self.query_one(Tree)
         tree.clear()
         previous_chats = tree.root.expand()
-        
+
         categories = Category.select()
         tree_dict = {}
 
         ##### keep this works
-        # setup categories (level 1) 
+        # setup categories (level 1)
         for category_name in categories:
             if str(category_name.text) != "default":
-                tree_dict[str(category_name.id)] = previous_chats.add(str(category_name.text), allow_expand=True)
+                tree_dict[str(category_name.id)] = previous_chats.add(
+                    str(category_name.text), allow_expand=True
+                )
         tree.root.add("Current Chat")
         tree.root.add("New Chat")
 
-        
         # topic_list is a list of Topic objects
         topic_list = self.populate_tree_topic()
         for single_topic in topic_list:
             tree_dict[str(single_topic.category_id)].add(str(single_topic.text))
-
 
     ### this is the main wrapper for the chat ####
     async def chat_record_display(
@@ -248,7 +255,9 @@ class OllamaTermApp(App):
                 "Adding Files to Question. This might take a second",
                 severity="information",
             )
-            submitted_question = open_files_and_add_to_question(question, self.file_path)
+            submitted_question = open_files_and_add_to_question(
+                question, self.file_path
+            )
             question = question + f"{self.file_path}"
 
         logging.debug(submitted_question)
@@ -273,7 +282,9 @@ class OllamaTermApp(App):
             self.current_session_chat_object_list.append(chat_object_id)
 
             # display
-            self.add_wdg_to_scroll(question, answer, model_name, None, str(chat_object_id.id))
+            self.add_wdg_to_scroll(
+                question, answer, model_name, None, str(chat_object_id.id)
+            )
 
     #################################
     ##### ACTIONS | Main Window #####
@@ -305,7 +316,10 @@ class OllamaTermApp(App):
         self.followup_model_choice_name = model_obj.model
         logging.debug("Folloup Model name: {}".format(self.followup_model_choice_name))
         if int(event.value) > 0:
-            self.notify("Please Note: This will make the 'Thinking' phase take at least twice as long!", severity="warning")
+            self.notify(
+                "Please Note: This will make the 'Thinking' phase take at least twice as long!",
+                severity="warning",
+            )
 
     # submit button
     @on(Input.Submitted, "#question_text")
@@ -340,7 +354,10 @@ class OllamaTermApp(App):
 
         # clean up file path as the data will already be in messages
         model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
-        if self.chats_loaded == False and str(self.followup_model_choice_name) in model_list:
+        if (
+            self.chats_loaded == False
+            and str(self.followup_model_choice_name) in model_list
+        ):
             # this should be a call with a return
             logging.info(
                 f"{self.followup_model_choice_id} set as followup. Evaluating update."
@@ -361,9 +378,8 @@ class OllamaTermApp(App):
         input.clear()
         self.chats_loaded = False
 
-
     def view_previous_chats(self, previous_chats: list) -> None:
-        """ loads previous chats """
+        """loads previous chats"""
 
         chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
 
@@ -378,7 +394,11 @@ class OllamaTermApp(App):
             llm_model = LLM_MODEL.get_by_id(chat.llm_model_id)
 
             self.add_wdg_to_scroll(
-                chat.question, chat.answer, llm_model.model, previous_chat_date, str(chat.id)
+                chat.question,
+                chat.answer,
+                llm_model.model,
+                previous_chat_date,
+                str(chat.id),
             )
 
         reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(
@@ -388,7 +408,6 @@ class OllamaTermApp(App):
         # finally update on going session lists
         self.LLM_MESSAGES = self.LLM_MESSAGES + reformatted_previous_chats
         self.chat_object_list = list(previous_chats)
-
 
     async def on_tree_node_selected(self, event: Tree) -> None:
         """Load Old Chats in tree. If new just, save existing and clear."""
@@ -418,7 +437,6 @@ class OllamaTermApp(App):
             logging.debug("Category Selected")
 
         self.view_previous_chats(previous_chats)
-   
 
     @on(Button.Pressed, "#settings")
     def add_settings_screen_to_stack(self, event: Button.Pressed) -> None:
@@ -431,7 +449,6 @@ class OllamaTermApp(App):
         self.push_screen(
             IterationsScreen(self.iteration_count, self.model_info_as_string)
         )
-
 
     # Filepath and File export buttons
     @on(Button.Pressed, "#export")
@@ -468,20 +485,17 @@ class OllamaTermApp(App):
 
         if message.url_changed != "":
             self.url = message.url_changed
-        
-        self.update_tree()
 
+        self.update_tree()
 
     # note this isn't currently in use. Leaving for now as it could be useful
     def on_notify_message(self, message: SupportNotifyRequest) -> None:
         logging.info(f"SupportNotifyRequest: {message.content}, {message.severity}")
         self.notify(message.content, title=message.title)
 
-
     def done_loading(self) -> None:
         self.query_one("#SubmitQuestion").loading = False
         self.query_one("#question_text").loading = False
-
 
     async def add_topic_to_chat(self) -> None:
         """Save a summary of the chats and quit."""
@@ -489,7 +503,7 @@ class OllamaTermApp(App):
             "Updating Chat Topics. This will take a few seconds.",
             severity="information",
         )
-        unparsed_chats = Chat.select().where(Chat.topic_id == 1)    
+        unparsed_chats = Chat.select().where(Chat.topic_id == 1)
         topic_id = await create_and_apply_chat_topic_ui(
             self.url,
             self.chat_object_list,
@@ -499,10 +513,9 @@ class OllamaTermApp(App):
         for current_chat in unparsed_chats:
             current_chat.update_chat_topic_from_summary(topic_id)
 
-
     async def action_save(self) -> None:
         """Save a summary of the chats and quit."""
-        unparsed_chats = Chat.select().where(Chat.topic_id == 1)    
+        unparsed_chats = Chat.select().where(Chat.topic_id == 1)
         if len(unparsed_chats) > 0 and self.topic_id == 1:
             logging.debug("saving chats")
             self.push_screen(
@@ -512,22 +525,19 @@ class OllamaTermApp(App):
             self.pop_screen()
             self.chat_object_list = []
 
-
     async def action_quit(self) -> None:
         """Save a summary of the chats and quit."""
 
         await self.action_save()
         self.app.exit()
 
-
     async def on_load(self) -> None:
-        """ First time Database and inits setup here """
+        """First time Database and inits setup here"""
         if not os.path.exists(set_database_path()):
             await setup_db_and_initialize_defaults()
 
-
     def on_mount(self) -> None:
-        """ start up paramaters here"""
+        """start up paramaters here"""
 
         current_settings = CLI_Settings.get_by_id(1)
         model = LLM_MODEL.get_by_id(current_settings.llm_model_id)

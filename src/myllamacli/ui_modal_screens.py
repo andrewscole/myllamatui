@@ -6,15 +6,12 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll, Horizontal
 from textual.screen import Screen, ModalScreen
-from textual.widgets import (
-    Button,
-    Label,
-    Select
-)
+from textual.widgets import Button, Label, Select
 
 
 from myllamacli.db_models import LLM_MODEL
 from myllamacli.ui_shared import model_choice_setup
+
 
 # Modal screens
 class QuitScreen(ModalScreen):
@@ -25,6 +22,7 @@ class QuitScreen(ModalScreen):
         align: center middle;
     }
     """
+
     def __init__(self, qs_message: str) -> None:
         super().__init__()
         self.qs_message = qs_message

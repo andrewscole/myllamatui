@@ -69,7 +69,7 @@ async def post_to_llm(API_ENDPOINT: str, data: dict) -> httpx.Response:
     logging.debug(API_ENDPOINT)
     logging.debug(data)
 
-    logging.debug(f"Posting to API_ENDPOINT" )
+    logging.debug(f"Posting to API_ENDPOINT")
 
     async with httpx.AsyncClient() as client:
 
@@ -107,12 +107,14 @@ async def delete_llm_call(API_ENDPOINT: str, data: dict) -> httpx.Response:
     logging.debug(data)
 
     async with httpx.AsyncClient() as client:
-        response = await client.request(method="DELETE", url=API_ENDPOINT, json=data, timeout=300.0)
+        response = await client.request(
+            method="DELETE", url=API_ENDPOINT, json=data, timeout=300.0
+        )
 
         if response.status_code != 200:
             logging.error("Call failed")
 
         logging.debug("Call made, generating response")
         logging.debug(response)
-        
+
         return response

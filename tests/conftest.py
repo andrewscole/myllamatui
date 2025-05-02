@@ -1,7 +1,7 @@
 import pytest
 from peewee import SqliteDatabase
 
-from myllamacli.db_models import BaseModel, Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
+from src.myllamacli.db_models import BaseModel, Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
 
 # List all models you want to test
 TEST_MODELS = [Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings]

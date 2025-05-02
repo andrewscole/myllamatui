@@ -51,22 +51,22 @@ async def delete_llm_model(url: str, model: str) -> str:
 
 
 async def pull_and_parse_model_capabilities(url: str, model_name: str) -> Optional[str]:
-    """ Pull model info and return capability. """
+    """Pull model info and return capability."""
 
-    capability = 'general'
+    capability = "general"
 
     model_info = await post_action_to_model_manager(url, model_name, "model_info")
     model_info_json = model_info.json()
-    capabilities_list = model_info_json.get('capabilities', [capability])
-    
+    capabilities_list = model_info_json.get("capabilities", [capability])
+
     for specialization in capabilities_list:
-        if specialization not in ['completion', 'general', 'tools', 'insert']:
-            capability = specialization    
+        if specialization not in ["completion", "general", "tools", "insert"]:
+            capability = specialization
     return capability
 
 
 def parse_model_name_for_skill(model_name: str) -> Optional[str]:
-    """ check model name for capability. """
+    """check model name for capability."""
 
     capability = None
     standard_tool_list = {"code": "coding", "vision": "vision", "embed": "embedding"}
@@ -77,20 +77,16 @@ def parse_model_name_for_skill(model_name: str) -> Optional[str]:
 
 
 async def get_model_capabilities(url: str, model_name: str) -> str:
-    """ Parse name or pull info to determine capability. """
-    
+    """Parse name or pull info to determine capability."""
+
     # if the name tells us what it is, just use that otherwise kick out general
     capability = parse_model_name_for_skill(model_name)
-    #else do a call and set from the results
+    # else do a call and set from the results
     if not capability:
         capability = await pull_and_parse_model_capabilities(url, model_name)
     return capability
 
-
-
-
-        
-    #otherwise look it up.
+    # otherwise look it up.
     return await pull_and_parse_model_capabilities(url, model_name)
 
 
@@ -103,13 +99,13 @@ def add_model_if_not_present(ollama_list: List, stored_llm_models: List) -> None
     for existing_model in ollama_list["models"]:
         if existing_model["model"] in db_list:
             db_model = LLM_MODEL.get(LLM_MODEL.model == existing_model["model"])
-            db_model.currently_available=True
+            db_model.currently_available = True
             db_model.save()
 
         else:
             LLM_MODEL.get_or_create(
                 model=existing_model["model"],
-                specialization = "General",
+                specialization="General",
                 size=existing_model["size"],
                 currently_available=True,
             )

@@ -38,14 +38,21 @@ async def setup_db_and_initialize_defaults() -> None:
     for context_text in contexts_list:
         context_id = Context.create(text=context_text)
 
-    category_list = ["default", "Jokes", "Python", "Ruby", "Software Design", "AWS", "Historical Figures"]
+    category_list = [
+        "default",
+        "Jokes",
+        "Python",
+        "Ruby",
+        "Software Design",
+        "AWS",
+        "Historical Figures",
+    ]
     for category_text in category_list:
         Category.create(text=category_text)
 
-
     topic_dict = {"default": "1", "Dad Jokes": "2", "Python Textual": "3"}
     for topic_key in topic_dict.keys():
-        Topic.create(text=topic_key, category_id=topic_dict[topic_key] )
+        Topic.create(text=topic_key, category_id=topic_dict[topic_key])
 
     await read_add_models(CLI_DEFAULTS["url"])
     create_cli_defaults()
@@ -53,7 +60,9 @@ async def setup_db_and_initialize_defaults() -> None:
 
 def create_temp_fake_model() -> None:
     logging.info("No Models Found. Creating a fake model. Please pull a model.")
-    LLM_MODEL.create(model="Temp_fake", specialization="general", size=0, currently_available=True)
+    LLM_MODEL.create(
+        model="Temp_fake", specialization="general", size=0, currently_available=True
+    )
 
 
 async def read_add_models(url: str) -> None:
@@ -65,9 +74,11 @@ async def read_add_models(url: str) -> None:
             for model in model_list["models"]:
                 LLM_MODEL.create(
                     model=model["model"],
-                    specialization= await get_model_capabilities(url, str(model["model"])),
+                    specialization=await get_model_capabilities(
+                        url, str(model["model"])
+                    ),
                     size=model["size"],
-                    currently_available=True
+                    currently_available=True,
                 )
     except:
         create_temp_fake_model()

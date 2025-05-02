@@ -1,6 +1,6 @@
 [project]
-name = "my_llama_cli"
-version = "0.1.0"
+name = "myllamacli"
+version = "0.0.1"
 description = "A CLI application that interfaces with ollama and allows you to store and acces chats"
 readme = "README.md"
 authors = [{ name = "Andrew Cole", email = "376180+andrewscole@users.noreply.github.com" }]
