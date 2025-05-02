@@ -6,6 +6,7 @@ from typing import List, Dict, Tuple
 
 
 from peewee import *
+
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Grid, VerticalScroll, Horizontal, Vertical
@@ -17,14 +18,13 @@ from textual.widgets import (
     Label,
     Markdown,
     Select,
-    Static,
     Tree,
 )
 
 # from typing import Any, Touple, List
 
 from myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
-from myllamacli.shared_utils import set_database_path
+from myllamacli.init_files import set_database_path
 from myllamacli.setup_utils import setup_db_and_initialize_defaults
 from myllamacli.chats import (
     chat_with_llm_UI,
@@ -32,8 +32,9 @@ from myllamacli.chats import (
     resume_previous_chats_ui,
     save_chat,
 )
+from myllamacli.import_export_files import open_files_and_add_to_question, check_file_type
 from myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from myllamacli.ui_widgets_messages import QuestionAsk, FileSelected, SettingsChanged
+from myllamacli.ui_widgets_messages import QuestionAsk, FileSelected, SettingsChanged, SupportNotifyRequest
 from myllamacli.ui_file_screen import FilePathScreen
 from myllamacli.ui_settings_screen import SettingsScreen
 from myllamacli.ui_modal_screens import QuitScreen
@@ -68,7 +69,7 @@ class OllamaTermApp(App):
     TITLE = "LlamaTerminalUI"
     SUB_TITLE = "Local UI for for accessing Ollama"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Custom init for app"""
         super().__init__()
         # main window
@@ -199,7 +200,7 @@ class OllamaTermApp(App):
         return previous_chats
 
 
-    def update_tree(self):
+    def update_tree(self) -> None:
         """Update tree with selections from the DB"""
 
         tree = self.query_one(Tree)
@@ -239,17 +240,31 @@ class OllamaTermApp(App):
         """Wraps chat call, saving to db, and displaying"""
         # chat
 
+        # send submitted quesiton to llm
+        submitted_question = question
+
+        if file_path != "":
+            self.notify(
+                "Adding Files to Question. This might take a second",
+                severity="information",
+            )
+            submitted_question = open_files_and_add_to_question(question, self.file_path)
+            question = question + f"{self.file_path}"
+
+        logging.info("HERE IS WHAT I AM SUBMITTING")
+        logging.info(submitted_question)
+
         answer, self.LLM_MESSAGES = await chat_with_llm_UI(
             url,
-            question,
+            submitted_question,
             context,
             messages,
             model_name,
-            file_path,
         )
 
         if ACURATE_RESPONSE not in answer:
             # record
+            # send question to db - with path only if needed
             chat_object_id = save_chat(
                 question, answer, self.context_choice_id, self.topic_id, model_id
             )
@@ -310,6 +325,7 @@ class OllamaTermApp(App):
         input.loading = True
         # call LLM
         logging.debug("questions: {}".format(question))
+
         await self.chat_record_display(
             self.url,
             question,
@@ -320,8 +336,10 @@ class OllamaTermApp(App):
             self.file_path,
         )
 
-        # clean up file path as the data will already be in messages
+        # reset files to ensure that they isn't added repeatdly
         self.file_path = ""
+
+        # clean up file path as the data will already be in messages
         model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
         if self.chats_loaded == False and str(self.followup_model_choice_name) in model_list:
             # this should be a call with a return
@@ -455,6 +473,11 @@ class OllamaTermApp(App):
             self.url = message.url_changed
         
         self.update_tree()
+
+
+    def on_notify_message(self, message: SupportNotifyRequest) -> None:
+        logging.info(message.content, message.severity)
+        self.notify(message.content, title=message.title)
 
 
     def done_loading(self) -> None:

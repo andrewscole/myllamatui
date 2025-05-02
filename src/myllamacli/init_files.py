@@ -1,6 +1,7 @@
+import logging
 import os
 
-from typing import Dict, Callable
+from pathlib import Path
 
 
 def set_database_path() -> str:
@@ -14,10 +15,3 @@ def set_database_path() -> str:
         os.mkdir(db_path)
 
     return MYLLAMACLI_DB
-
-
-def open_file(file_path: str) -> str:
-    """open a file"""
-
-    with open(file_path, "r") as file:
-        return file.read()

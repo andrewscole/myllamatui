@@ -73,7 +73,7 @@ async def post_to_llm(API_ENDPOINT: str, data: dict) -> httpx.Response:
 
     async with httpx.AsyncClient() as client:
 
-        response = await client.post(API_ENDPOINT, json=data, timeout=300.0)
+        response = await client.post(API_ENDPOINT, json=data, timeout=420.0)
 
         if response.status_code != 200:
             logging.error("Call failed")

@@ -25,7 +25,7 @@ class QuitScreen(ModalScreen):
         align: center middle;
     }
     """
-    def __init__(self, qs_message):
+    def __init__(self, qs_message: str) -> None:
         super().__init__()
         self.qs_message = qs_message
 

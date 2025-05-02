@@ -3,8 +3,71 @@ import os
 import re
 
 from typing import List
+from pathlib import Path
+
+from myllamacli.db_models import LLM_MODEL
+from myllamacli.ui_widgets_messages import SupportNotifyRequest
+
+#video_extensions = [".mpeg", ".avi", ".wmv", ".mov", ".flv", "mp4", ".mpeg-4", ".mkv"]
+#audio_extenisions = [".aiff", ".mp3", ".wav", ".midi", ".aac", ".flac", ".m4A", ".wma", ".alac"]
+PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".png", ".tiff", ".bmp", ".pdf", ".xcf", ".img", ".svg"]
 
 
+# import related definions
+def open_file(file_path: str) -> str:
+    """open a file"""
+    try:
+        with open(file_path, "r") as file:
+            f = file.read()
+    except:
+        SupportNotifyRequest(content=f"Unable to open file.{file_path}", severity="warning")
+        f = "File Unproccessable"
+    return f
+
+
+def open_files_in_dir(file_path: str) -> List[str]:
+    """open all files in a directory, excluding known types"""
+
+    root_dir = Path(file_path)
+    file_input = []
+    file_ignore_list = [".DS_Store", ".python-version", ".ssh", ".git", ".mypy_cache", "__pycache__"]
+    for single_file_path in root_dir.rglob('*'):
+        if single_file_path.is_file() and not any(str(part) in file_ignore_list for part in single_file_path.parts):
+            logging.info(f"opening: {str(single_file_path)}")
+            single_file = open_file(single_file_path)
+            file_input.append(single_file)
+    return file_input
+
+
+def open_files_and_add_to_question(question: str, file_path: str) -> str:
+    """Open single file or directory of files and add to question"""
+
+    if os.path.isdir(file_path):
+        file_input =  open_files_in_dir(file_path, current_llm_model_id)
+        question = f"{question}. Here are my files: {file_input}"
+    else:
+        file_input = open_file(file_path)
+        question = f"{question}. Here is my file: {file_input}"
+        logging.info("here")
+        logging.info(question)
+    return question
+
+
+### WIP ###
+def check_file_type(file_path: str, current_llm_model_id: str) -> bool:
+    model = LLM_MODEL.get_by_id(current_llm_model_id)
+    specialization = model.specialization
+    extension = os.path.splitext(file_path)[1]
+    if extension in PHOTO_EXTENSIONS and specialization == "vision":
+        use_this_llm =True
+    elif extension in PHOTO_EXTENSIONS and specialization != "vision":
+        use_this_llm = False
+    else:
+        use_this_llm = True
+    return use_this_llm
+
+        
+        
 # export related definitions
 def parse_export_path(export_path: str, is_dir: bool = False) -> str:
     """Parse the export path"""

@@ -26,7 +26,7 @@ from myllamacli.ui_modal_screens import QuitScreen
 class SettingsScreen(Screen):
 
     # might not need this
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         super().__init__()
         self.close_message = ""
         self.model_to_delete = ""
@@ -149,7 +149,7 @@ class SettingsScreen(Screen):
                 yield Button("Delete Model", id="DeleteModel", variant="warning")
 
     # I don't like this. It needs updating.
-    def models_datatable(self):
+    def models_datatable(self) -> DataTable:
         all_models = LLM_MODEL.select()
         table = DataTable(id="models_data_table")
         tbl_columns = {"Name": "name", "Currently Available": "available", "Specialization": "specialization", "Size":"size", "Download Date": "date", "Number of Chats": "used"}
@@ -361,8 +361,8 @@ class SettingsScreen(Screen):
             self.dbmodels["model_changed"] = "True"
 
         else:
-            logging.info("Pull failed. output:{0}".format(pull_text))
-            self.notify("Something Went Wrong. Please check name", severity="error")
+            logging.info("Pull failed. output:{0}".format(pull_text.text))
+            self.notify("Something Went Wrong. Please check name and logs", severity="error")
 
 
     @on(DataTable.CellSelected)

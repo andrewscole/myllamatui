@@ -5,7 +5,6 @@ import re
 import statistics
 
 from datetime import datetime
-from peewee import fn
 from typing import List, Dict, Tuple
 
 from myllamacli.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
@@ -17,9 +16,9 @@ from myllamacli.llm_calls import (
     post_to_llm,
     parse_response
 )
-from myllamacli.shared_utils import open_file
 
-def save_chat(question, answer, context_id, topic_id, model_id):
+
+def save_chat(question: str, answer: str, context_id: str, topic_id: str, model_id: str) -> Chat:
     """ Save the current chat to the DB"""
     chat_id = Chat.create(
         question=question,
@@ -33,25 +32,9 @@ def save_chat(question, answer, context_id, topic_id, model_id):
 
 
 async def chat_with_llm_UI(url: str, 
-    question: str, context_text: str, MESSAGES: List, model_name: str, file: str
+    question: str, context_text: str, MESSAGES: List, model_name: str
 ) -> Tuple[str, List]:
     """ take question, context, messages, modelname and file parse for api call and return answer and messages"""
-
-    if file != "":
-        if os.path.isdir(file):
-            all_files = []
-            files_in_dir = os.listdir(file)
-            if len(files_in_dir) > 10:
-                self.notify("Please note, this directory has more than 10 files. This could take a while")
-            for f in files_in_dir: 
-                file_input = open_file(file + "/" + str(f))
-                all_files.append(file_input)
-            question = f"{question}. Here are my files: {file_input}"
-        else:
-            file_input = open_file(file)
-            question = f"{question}. Here is my file: {file_input}"
-        file = False
-
 
     context_dict = create_context_dict(context_text)
     user_input_dict = generate_input_dict(question)

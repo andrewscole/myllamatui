@@ -16,13 +16,13 @@ from textual.widgets import (
 
 # message classes
 class FileSelected(Message):
-    def __init__(self, path: str):
+    def __init__(self, path: str) -> None:
         super().__init__()
         self.path = path
 
 
 class SettingsChanged(Message):
-    def __init__(self, context_changed: str, category_changed: str, topic_changed: str, model_changed: str, url_changed: str):
+    def __init__(self, context_changed: str, category_changed: str, topic_changed: str, model_changed: str, url_changed: str) -> None:
         super().__init__()
         self.context_changed = context_changed
         self.category_changed = category_changed
@@ -31,9 +31,16 @@ class SettingsChanged(Message):
         self.url_changed = url_changed
 
 
+class SupportNotifyRequest(Message):
+    def __init__(self, content: str, severity: str) -> None:
+        super().__init__()
+        self.content = content
+        self.severity = severity
+
+
 # widgets
 class FilteredDirectoryTree(DirectoryTree):
-    def __init__(self, path: Path, show_hidden: bool = False, **kwargs):
+    def __init__(self, path: Path, show_hidden: bool = False, **kwargs) -> None:
         super().__init__(path, **kwargs)
         self.show_hidden = show_hidden
 

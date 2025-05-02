@@ -1,13 +1,14 @@
 import logging
+import os
+
+from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import (
     Button,
     Checkbox,
-    ContentSwitcher, 
     Input,
     Label,
     RadioSet,
@@ -15,7 +16,7 @@ from textual.widgets import (
     Static,
 )
 
-from myllamacli.export_files import parse_export_path, export_chat_as_file_ui
+from myllamacli.import_export_files import parse_export_path, export_chat_as_file_ui
 from myllamacli.ui_widgets_messages import FileSelected, FilteredDirectoryTree
 
 class FilePathScreen(Screen):
@@ -52,7 +53,7 @@ class FilePathScreen(Screen):
         yield Checkbox("show hidden files?", id="show_hiddent_files")
         yield FilteredDirectoryTree(path=parse_export_path("~", True), id="dirtree")
         yield Input(placeholder="Enter file name", id="FilePathInput", classes=show_export)
-        with RadioSet(id="importexportradio"):
+        with RadioSet(id="importexportradio", classes=show_export):
             yield RadioButton("Export Entire Chat", id="r1", value=True)
             yield RadioButton("Export Code Only", id="r2")
         yield Button("Import Files", id="submitpath", variant="primary")
@@ -63,18 +64,11 @@ class FilePathScreen(Screen):
         tree = self.query_one(FilteredDirectoryTree)
         tree.show_hidden = False
 
-        # change radioset buttons
-        r1 = self.query_one("#r1")
-        r2 = self.query_one("#r2")
         submitbutton = self.query_one("#submitpath")
 
         if self.input_class:
-            r1.label = "Import Single File"
-            r2.label = "Import Directory"
             submitbutton.label = "Import Files"
         else:
-            r1.label = "Export Entire Chat"
-            r2.label = "Export Code Only"
             submitbutton.label = "Export Files"
 
         
@@ -105,14 +99,33 @@ class FilePathScreen(Screen):
 
         # open file
         if self.input_class:
-            logging.info("here")
-            if import_export_choice == 0:
+            dir_to_open = Path(self.path_choice).resolve()
+            home_dir = Path.home().resolve()
+            
+            forbidden_subdirs = [home_dir / "Library", home_dir / "Applications"]
+            
+            allowed_mount_roots = [
+                Path("/Volumes"),  # macOS
+                Path("/mnt"),      # Linux
+                Path("/media")     # Linux
+            ]
+
+            is_in_home = False
+            try:
+                is_in_home = dir_to_open.relative_to(home_dir)
+                is_in_home = True
+            except ValueError:
+                pass
+
+            is_in_allowed_mount = any(root in dir_to_open.parents for root in allowed_mount_roots)
+            is_in_forbidden_home = any(dir_to_open == p or p in dir_to_open.parents for p in forbidden_subdirs)
+            
+            if (is_in_home and not is_in_forbidden_home) or is_in_allowed_mount:
                 self.post_message(FileSelected(str(self.path_choice)))
-                logging.info("also here")
+                self.dismiss()                    
             else:
-                self.post_message(FileSelected(str(self.path_choice)))
-                logging.info("there")
-            self.dismiss()
+                self.notify("Please limit scanning to your user home folder (except applications or Library) or mounts", severity="Error")
+
         #export files
         else: 
             input = self.query_one("#FilePathInput")
@@ -137,7 +150,7 @@ class FilePathScreen(Screen):
 
 
     @on(FilteredDirectoryTree.FileSelected)
-    def on_directory_tree_file_selected(self, event: FilteredDirectoryTree.FileSelected):
+    def on_directory_tree_file_selected(self, event: FilteredDirectoryTree.FileSelected) -> None:
         """ Handles tree when importing a file"""
         logging.debug(f"directory: {event.path}")
         if self.input_class == True:
@@ -146,7 +159,7 @@ class FilePathScreen(Screen):
 
 
     @on(FilteredDirectoryTree.DirectorySelected)
-    def on_directory_tree_directory_selected(self, event: FilteredDirectoryTree.DirectorySelected):
+    def on_directory_tree_directory_selected(self, event: FilteredDirectoryTree.DirectorySelected) -> None:
         """ Handles tree when choosing Dir for saving"""
         logging.info(f"directory: {event.path}")
         self.path_choice = str(event.path)
