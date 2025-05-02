@@ -243,7 +243,6 @@ class SettingsScreen(Screen):
             topic_to_change.text = topic_text
         category_select = self.query_one("#CategoryEditChooseTopics")
         category_id = category_select.value
-        logging.info(category_id)
         if int(category_id) > 0 or category_id != Select.BLANK:
             topic_to_change.category_id = category_id
         topic_to_change.save()
@@ -373,7 +372,7 @@ class SettingsScreen(Screen):
         
         model_list = [model.model for model in LLM_MODEL.select() if model.currently_available == True]
         selection = str(event.value)
-        logging.info(selection)
+        logging.debug(selection)
         
         if f'{selection}' in model_list:
             self.query_one("#model_to_delete_label").update(f"To Delete: {selection}")
@@ -390,24 +389,6 @@ class SettingsScreen(Screen):
     @on(Button.Pressed, "#DeleteModel")
     async def delete_model_button_pressed(self, event: Button.Pressed) -> None:
         logging.debug("DeleteModel Button Pressed")
-
-        #### just for testing ####
-        #stored_llm_models = LLM_MODEL.select()
-        #table = self.query_one("#models_data_table")
-        #target = 'qwen2.5-coder:0.5b'
-        #logging.info(table.columns.keys())
-        #logging.info(table.get_row("R0"))
-        #logging.info(table.get_column("name"))
-        #if target in [sm.model for sm in stored_llm_models]:
-        #    logging.info("found it")
-        #    logging.info(table.row_count)
-        #    for row_index in range(table.row_count):
-        #        logging.info(row_index)
-        #        column_key = "name"
-        #        cell_value = table.get_cell(f"R{row_index}", column_key)
-        #        logging.info(cell_value)
-        #        if cell_value == target:
-        #            table.update_cell(f"R{row_index}", "available", "True")
     
         if self.model_to_delete == "":
             logging.error("Delete: No selection made from Models")

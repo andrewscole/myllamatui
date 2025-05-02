@@ -48,12 +48,10 @@ def open_files_and_add_to_question(question: str, file_path: str) -> str:
     else:
         file_input = open_file(file_path)
         question = f"{question}. Here is my file: {file_input}"
-        logging.info("here")
-        logging.info(question)
     return question
 
 
-### WIP ###
+### This currently does nothing, but could be useful so I am leaving it for the moment ###
 def check_file_type(file_path: str, current_llm_model_id: str) -> bool:
     model = LLM_MODEL.get_by_id(current_llm_model_id)
     specialization = model.specialization

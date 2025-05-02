@@ -82,7 +82,6 @@ class FilePathScreen(Screen):
     @on(Checkbox.Changed)
     def checkbox_changed(self, event: Checkbox.Changed) -> None:
         self.show_hidden = event.value
-        logging.info(self.show_hidden)
         tree = self.query_one("#dirtree", FilteredDirectoryTree)
         tree.show_hidden = self.show_hidden
         tree.reload() 
@@ -130,11 +129,10 @@ class FilePathScreen(Screen):
         else: 
             input = self.query_one("#FilePathInput")
             file_name = str(input.value)
-            logging.info(f"name: {file_name}")
             self.path_choice = self.path_choice + "/" + file_name
             logging.info(f"dir {self.path_choice}")
 
-            logging.info(f"export_toggle: {import_export_choice}")
+            logging.debug(f"export_toggle: {import_export_choice}")
             if import_export_choice == 1:
                 code_only = True
                 self.notify("Exporting Chat. Please wait.")
@@ -142,7 +140,7 @@ class FilePathScreen(Screen):
                 code_only = False
                 self.notify("Exporting Code examples from Chat. Please wait.")
             if len(self.chat_object_list) > 0:
-                logging.info(f"exporting {self.chat_object_list} to: {self.path_choice}")
+                logging.debug(f"exporting {self.chat_object_list} to: {self.path_choice}")
                 export_chat_as_file_ui(self.path_choice, self.chat_object_list, code_only)
                 self.notify("Chats Exported")
             else: 
@@ -155,12 +153,12 @@ class FilePathScreen(Screen):
         logging.debug(f"directory: {event.path}")
         if self.input_class == True:
             self.path_choice = str(event.path)
-            logging.info(f"file {self.path_choice}")
+            logging.debug(f"file {self.path_choice}")
 
 
     @on(FilteredDirectoryTree.DirectorySelected)
     def on_directory_tree_directory_selected(self, event: FilteredDirectoryTree.DirectorySelected) -> None:
         """ Handles tree when choosing Dir for saving"""
-        logging.info(f"directory: {event.path}")
+        logging.debug(f"directory: {event.path}")
         self.path_choice = str(event.path)
 

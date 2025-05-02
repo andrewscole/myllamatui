@@ -30,7 +30,7 @@ class SettingsChanged(Message):
         self.model_changed = model_changed
         self.url_changed = url_changed
 
-
+# this is currently unused. Leaving for now as it could be useful
 class SupportNotifyRequest(Message):
     def __init__(self, content: str, severity: str) -> None:
         super().__init__()
