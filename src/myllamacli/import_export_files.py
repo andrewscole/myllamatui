@@ -5,8 +5,8 @@ import re
 from typing import List
 from pathlib import Path
 
-from myllamacli.db_models import LLM_MODEL
-from myllamacli.ui_widgets_messages import SupportNotifyRequest
+from src.myllamacli.db_models import LLM_MODEL, Chat
+from src.myllamacli.ui_widgets_messages import SupportNotifyRequest
 
 # video_extensions = [".mpeg", ".avi", ".wmv", ".mov", ".flv", "mp4", ".mpeg-4", ".mkv"]
 # audio_extenisions = [".aiff", ".mp3", ".wav", ".midi", ".aac", ".flac", ".m4A", ".wma", ".alac"]
@@ -31,7 +31,7 @@ def open_file(file_path: str) -> str:
             f = file.read()
     except:
         SupportNotifyRequest(
-            content=f"Unable to open file.{file_path}", severity="warning"
+            content=f"Unable to open file. {file_path}", severity="warning"
         )
         f = "File Unproccessable"
     return f
@@ -64,7 +64,7 @@ def open_files_and_add_to_question(question: str, file_path: str) -> str:
     """Open single file or directory of files and add to question"""
 
     if os.path.isdir(file_path):
-        file_input = open_files_in_dir(file_path, current_llm_model_id)
+        file_input = open_files_in_dir(file_path)
         question = f"{question}. Here are my files: {file_input}"
     else:
         file_input = open_file(file_path)
@@ -100,11 +100,8 @@ def parse_export_path(export_path: str, is_dir: bool = False) -> str:
     return export_path
 
 
-def export_text_file(export_path: str, chats: list) -> None:
+def export_text_file(export_path: str, chats: list[Chat]) -> None:
     """Export a chat session or topic to a file"""
-    logging.debug("chats at the export stage")
-    logging.debug(chats)
-
     with open(export_path, "w") as file:
         for i in range(0, len(chats)):
             file.write(f"Chat #:{i + 1}" + "\n")
@@ -116,7 +113,7 @@ def export_text_file(export_path: str, chats: list) -> None:
                 file.write("\n" + "---------------" + "\n")
 
 
-def export_code_file(export_path: str, chats: list) -> None:
+def export_code_file(export_path: str, chats: list[Chat]) -> None:
     """Export code sections to individual files."""
 
     logging.debug(

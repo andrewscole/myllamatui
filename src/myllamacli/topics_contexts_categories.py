@@ -60,21 +60,6 @@ def compare_topics_and_categories_prompt(
     )
     return {"role": "user", "content": compliation_prompt}
 
-    # match = None
-    # topics = Topic.select()
-    # words = summary.split(" ")
-    # summarywords = [
-    #    word
-    #    for word in words
-    #    if word.lower()
-    #    not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that"]
-    # ]
-    # for word in summarywords:
-    #    for topic in topics:
-    ##        if word.lower() in topic.text.lower():
-    #            match = topic.id  # topic_id
-    # return match
-
 
 def check_for_topic_and_category_match(summary: str, items: list) -> Optional[int]:
     """compare llm generated summary to existing summaries and return mach id or None"""

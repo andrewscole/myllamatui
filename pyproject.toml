@@ -24,6 +24,7 @@ dependencies = [
 dev = [
     "black",
     "pytest",
+    "pytest-asyncio",
     "pytest-cov", 
     "flake8"
 ]

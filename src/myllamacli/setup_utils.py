@@ -55,8 +55,13 @@ async def setup_db_and_initialize_defaults() -> None:
         Topic.create(text=topic_key, category_id=topic_dict[topic_key])
 
     await read_add_models(CLI_DEFAULTS["url"])
-    create_cli_defaults()
 
+    CLI_Settings.create(
+        url=CLI_DEFAULTS["url"],
+        context_id=CLI_DEFAULTS["context_id"],
+        topic_id=CLI_DEFAULTS["topic_id"],
+        llm_model_id=CLI_DEFAULTS["llm_model_id"],
+    )
 
 def create_temp_fake_model() -> None:
     logging.info("No Models Found. Creating a fake model. Please pull a model.")
@@ -82,12 +87,3 @@ async def read_add_models(url: str) -> None:
                 )
     except:
         create_temp_fake_model()
-
-
-def create_cli_defaults() -> None:
-    CLI_Settings.create(
-        url=CLI_DEFAULTS["url"],
-        context_id=CLI_DEFAULTS["context_id"],
-        topic_id=CLI_DEFAULTS["topic_id"],
-        llm_model_id=CLI_DEFAULTS["llm_model_id"],
-    )

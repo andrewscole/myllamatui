@@ -136,12 +136,7 @@ class OllamaTermApp(App):
                 prompt="Verificatin Model:",
                 id="VerificationModelSelect_topbar",
             )
-            yield VerticalScroll(id="CurrentChant_MainChatWindow")
-            # yield Select(
-            #    iter((sort_choice, sort_choice) for sort_choice in ["Topics", "Dates"]),
-            #    prompt="Sort Chats By:",
-            #    id="ChatHistorySelect_topright",
-            # )
+            yield VerticalScroll(id="CurrentChat_MainChatWindow")
             yield Tree("Previous Chats", id="ChatHistoryDisplay_sidebar")
             yield QuestionAsk(id="QuestionAsk_bottombar")
             yield Button("Add File", id="filepathbutton", variant="primary")
@@ -159,9 +154,9 @@ class OllamaTermApp(App):
         model_name: str,
         previouschatdate: str,
         chat_id: str,
+        chatcontainer,
     ) -> None:
         """Create and mount widgets for chat"""
-        chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
 
         # mount date and model info
         if previouschatdate is not None:
@@ -282,8 +277,11 @@ class OllamaTermApp(App):
             self.current_session_chat_object_list.append(chat_object_id)
 
             # display
+            chatcontainer = self.query_one("#CurrentChat_MainChatWindow")
+
             self.add_wdg_to_scroll(
-                question, answer, model_name, None, str(chat_object_id.id)
+                question, answer, model_name, None, str(chat_object_id.id), chatcontainer,
+
             )
 
     #################################
@@ -332,10 +330,25 @@ class OllamaTermApp(App):
         # setup question
         input = self.query_one("#question_text")
         question = input.value
+        
+        # clean up file path as the data will already be in messages
+        model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
 
         # setup loading graphic
         self.query_one("#SubmitQuestion").loading = True
         input.loading = True
+
+        logging.debug("saving chats")
+
+        # so this causes a issue that I think is probably async render related, defaulting to loading first.
+
+        #querying_note = f"Querying {self.model_choice_name}. This could take a while, particularly when using models over 10b. Time out is set to 15 min."
+        #if str(self.followup_model_choice_name) in model_list:
+        #    f"Querying {self.model_choice_name} and evaluating with {self.followup_model_choice_name} This will take a while. Time out is set to 15 min per call."
+        #self.push_screen(
+        #    QuitScreen(querying_note)
+        #)
+
         # call LLM
         logging.debug("questions: {}".format(question))
 
@@ -351,9 +364,6 @@ class OllamaTermApp(App):
 
         # reset files to ensure that they isn't added repeatdly
         self.file_path = ""
-
-        # clean up file path as the data will already be in messages
-        model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
         if (
             self.chats_loaded == False
             and str(self.followup_model_choice_name) in model_list
@@ -381,7 +391,7 @@ class OllamaTermApp(App):
     def view_previous_chats(self, previous_chats: list) -> None:
         """loads previous chats"""
 
-        chatcontainer = self.query_one("#CurrentChant_MainChatWindow")
+        chatcontainer = self.query_one("#CurrentChat_MainChatWindow")
 
         for item in chatcontainer.children:
             item.remove()
@@ -399,6 +409,7 @@ class OllamaTermApp(App):
                 llm_model.model,
                 previous_chat_date,
                 str(chat.id),
+                chatcontainer,
             )
 
         reformatted_previous_chats, self.topic_id = resume_previous_chats_ui(

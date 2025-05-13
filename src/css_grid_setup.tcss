@@ -27,7 +27,7 @@ Grid {
 
 }
 
-#CurrentChant_MainChatWindow {
+#CurrentChat_MainChatWindow {
 	column-span: 8;
 	row-span: 8;
 	padding: 3;
