@@ -136,12 +136,12 @@ class FilePathScreen(Screen):
             self.path_choice = self.path_choice + "/" + file_name
             logging.info(f"dir {self.path_choice}")
 
-            logging.debug(f"export_toggle: {import_export_choice}")
-            if import_export_choice == 1:
-                code_only = True
+            logging.info(f"export_toggle: {import_export_choice}")
+            if import_export_choice == 0:
+                code_only = False
                 self.notify("Exporting Chat. Please wait.")
             else:
-                code_only = False
+                code_only = True
                 self.notify("Exporting Code examples from Chat. Please wait.")
             if len(self.chat_object_list) > 0:
                 logging.debug(

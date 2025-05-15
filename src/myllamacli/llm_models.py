@@ -3,14 +3,14 @@ import json
 
 from typing import Dict, List, Optional
 
-from myllamacli.llm_calls import (
+from src.myllamacli.llm_calls import (
     generate_endpoint,
     generate_data_for_model_pull,
     post_to_llm,
     get_from_llm,
     delete_llm_call,
 )
-from myllamacli.db_models import LLM_MODEL, Chat
+from src.myllamacli.db_models import LLM_MODEL, Chat
 
 
 # pulling and parsing return from Ollama
@@ -85,9 +85,6 @@ async def get_model_capabilities(url: str, model_name: str) -> str:
     if not capability:
         capability = await pull_and_parse_model_capabilities(url, model_name)
     return capability
-
-    # otherwise look it up.
-    return await pull_and_parse_model_capabilities(url, model_name)
 
 
 # checking db against Ollama

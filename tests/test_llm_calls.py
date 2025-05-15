@@ -24,7 +24,6 @@ class MockResponse:
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.post", new_callable=AsyncMock)
 async def test_post_to_llm(mock_post):
     # Arrange
     mock_post.return_value = httpx.Response(status_code=200, json={"message": "Success"})
@@ -42,7 +41,6 @@ async def test_post_to_llm(mock_post):
 
 
 @pytest.mark.asyncio
-@patch("src.myllamacli.llm_calls.httpx.AsyncClient.get", new_callable=AsyncMock)
 async def test_get_from_llm(mock_get):
     # Arrange
     mock_get.return_value = httpx.Response(status_code=200, json={"data": "test_data"})
@@ -59,10 +57,9 @@ async def test_get_from_llm(mock_get):
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.request", new_callable=AsyncMock)
-async def test_delete_llm_call(mock_request):
+async def test_delete_llm_call(mock_delete):
     # Arrange
-    mock_request.return_value = httpx.Response(status_code=200, json={"deleted": True})
+    mock_delete.return_value = httpx.Response(status_code=200, json={"deleted": True})
 
     api_endpoint = "https://example.com/api/delete"
     data = {"id": 123}
@@ -71,7 +68,7 @@ async def test_delete_llm_call(mock_request):
     response = await delete_llm_call(api_endpoint, data)
 
     # Assert
-    mock_request.assert_called_once_with(
+    mock_delete.assert_called_once_with(
         method="DELETE", url=api_endpoint, json=data, timeout=300.0
     )
     assert response.status_code == 200

@@ -174,9 +174,12 @@ def export_code_file(export_path: str, chats: list[Chat]) -> None:
                         )
                         file_path = export_path + "/" + file_name
                 # write the "files that represent lines here by writing each individual line"
+                        logging.debug(f"writing to {file_path}")
                 with open(file_path, "w") as file:
                     for line in lines[1:-1]:
                         file.write(line)
+                logging.debug("file written")
+
                 file_count += 1
 
 

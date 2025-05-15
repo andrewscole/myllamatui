@@ -501,7 +501,7 @@ class OllamaTermApp(App):
 
     # note this isn't currently in use. Leaving for now as it could be useful
     def on_notify_message(self, message: SupportNotifyRequest) -> None:
-        logging.info(f"SupportNotifyRequest: {message.content}, {message.severity}")
+        logging.debug(f"SupportNotifyRequest: {message.content}, {message.severity}")
         self.notify(message.content, title=message.title)
 
     def done_loading(self) -> None:

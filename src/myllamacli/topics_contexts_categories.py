@@ -2,8 +2,8 @@ import logging
 
 from typing import List, Dict, Optional
 
-from myllamacli.db_models import Topic, Category
-from myllamacli.prompts import (
+from src.myllamacli.db_models import Topic, Category
+from src.myllamacli.prompts import (
     ADD_OR_APPLY_TOPIC_TO_CHAT,
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,

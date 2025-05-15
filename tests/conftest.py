@@ -1,8 +1,10 @@
 import pytest
 import datetime
 
+import httpx
+
+from unittest.mock import AsyncMock, patch
 from pathlib import Path
-from unittest.mock import patch
 
 from peewee import *
 
@@ -81,3 +83,22 @@ def mock_logging():
     with patch('logging.info') as mock_logging:
         with patch('logging.debug') as mock_logging_debug:
             yield mock_logging, mock_logging_debug
+
+
+@pytest.fixture
+def mock_get():
+    """Fixture to mock httpx.AsyncClient.get method."""
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock:
+        yield mock
+
+@pytest.fixture
+def mock_post():
+    """Fixture to mock httpx.AsyncClient.post method."""
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock:
+        yield mock
+
+@pytest.fixture
+def mock_delete():
+    """Fixture to mock httpx.AsyncClient.post method."""
+    with patch("httpx.AsyncClient.request", new_callable=AsyncMock) as mock:
+        yield mock
