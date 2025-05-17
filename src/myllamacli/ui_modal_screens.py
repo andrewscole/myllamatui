@@ -9,8 +9,8 @@ from textual.screen import Screen, ModalScreen
 from textual.widgets import Button, Label, Select
 
 
-from myllamacli.db_models import LLM_MODEL
-from myllamacli.ui_shared import model_choice_setup
+from src.myllamacli.db_models import LLM_MODEL
+from src.myllamacli.ui_shared import model_choice_setup
 
 
 # Modal screens

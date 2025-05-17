@@ -23,32 +23,32 @@ from textual.widgets import (
 
 # from typing import Any, Touple, List
 
-from myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
-from myllamacli.init_files import set_database_path
-from myllamacli.setup_utils import setup_db_and_initialize_defaults
-from myllamacli.chats import (
+from src.myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
+from src.myllamacli.init_files import set_database_path
+from src.myllamacli.setup_utils import setup_db_and_initialize_defaults
+from src.myllamacli.chats import (
     chat_with_llm_UI,
     create_and_apply_chat_topic_ui,
     resume_previous_chats_ui,
     save_chat,
 )
-from myllamacli.import_export_files import (
+from src.myllamacli.import_export_files import (
     open_files_and_add_to_question,
     check_file_type,
 )
-from myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from myllamacli.ui_widgets_messages import (
+from src.myllamacli.ui_shared import model_choice_setup, context_choice_setup
+from src.myllamacli.ui_widgets_messages import (
     QuestionAsk,
     FileSelected,
     SettingsChanged,
     SupportNotifyRequest,
 )
-from myllamacli.ui_file_screen import FilePathScreen
-from myllamacli.ui_settings_screen import SettingsScreen
-from myllamacli.ui_modal_screens import QuitScreen
+from src.myllamacli.ui_file_screen import FilePathScreen
+from src.myllamacli.ui_settings_screen import SettingsScreen
+from src.myllamacli.ui_modal_screens import QuitScreen
 
 # CONSTANT PROMPTS
-from myllamacli.prompts import (
+from src.myllamacli.prompts import (
     DO_NOT_MAKEUP,
     EVALUATION_QUESTION,
     EVALUTATE_CONTEXT,

@@ -45,7 +45,6 @@ def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
     return {"role": "user", "content": topic_summary_text + category_instructions}
 
 
-#### NOTE I CAHGED THIS
 def compare_topics_and_categories_prompt(
     summary: str, item_list: list
 ) -> Optional[int]:
@@ -63,16 +62,38 @@ def compare_topics_and_categories_prompt(
 
 def check_for_topic_and_category_match(summary: str, items: list) -> Optional[int]:
     """compare llm generated summary to existing summaries and return mach id or None"""
-    match = None
+    selected_match = None
     words = summary.split(" ")
+
+    # filter for non-essential words
     summarywords = [
         word
         for word in words
         if word.lower()
-        not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that"]
+        not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that", "is"]
     ]
-    for word in summarywords:
+
+    # loop through remaining words and find matches in existing topics. 
+    # create a dict withthe {topic_id:num of matches}
+    match_dict = {}
+    for i in range(len(summarywords)):
+        word = summarywords[i]
         for item in items:
             if word.lower() in item.text.lower():
                 match = item.id  # topic_id
-    return match
+                if match in match_dict.keys():
+                    match_dict[match] += 1
+                else:
+                    match_dict[match] = 1
+
+    # find the highest match in the dict from above
+    # if above 60% of the essential words match an exisiting topic, use it
+    highest = 0
+    for id in match_dict.keys():
+        if match_dict[id] > highest:
+            highest = match_dict[id]
+            potential_selection = id
+    if highest / len(summarywords) > .5:
+        selected_match = potential_selection
+
+    return selected_match

@@ -64,11 +64,6 @@ def update_chat_topic_from_summary(test_database):
     
     assert str(result.topic_id) == str(new_test_topic.id)
 
-
-
-
-
-
 def test_cli_settings_creation(test_database):
     test_model = LLM_MODEL.create(model="FakeModel", size=34567, specialization="general", currently_available=True)
     test_context = Context.create(text="my test context")

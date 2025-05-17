@@ -1,7 +1,7 @@
 import logging
 from typing import Iterator, Tuple
 
-from myllamacli.db_models import Category, Context, Topic, LLM_MODEL
+from src.myllamacli.db_models import Category, Context, Topic, LLM_MODEL
 
 
 # helper defs to populate select boxes

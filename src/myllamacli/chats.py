@@ -7,15 +7,15 @@ import statistics
 from datetime import datetime
 from typing import List, Dict, Tuple
 
-from myllamacli.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
-from myllamacli.topics_contexts_categories import (
+from src.myllamacli.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
+from src.myllamacli.topics_contexts_categories import (
     compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,
     create_context_dict,
     generate_current_topic_summary,
     generate_category_summary,
 )
-from myllamacli.llm_calls import (
+from src.myllamacli.llm_calls import (
     generate_endpoint,
     generate_data_for_chat,
     generate_input_dict,
@@ -79,16 +79,6 @@ async def create_and_apply_chat_topic_ui(
     url: str, chat_object_list: List, MESSAGES: List, model_name: str
 ) -> None:
     """Generate and update topic for the current chats"""
-
-    # setup vars
-    #    api_endpoint = generate_endpoint(url, "chat")
-    #    data = generate_data_for_chat(MESSAGES, model_name)
-    #    response = await post_to_llm(api_endpoint, data)
-    #    logging.debug(response.json())
-    #    _, topic_summary = parse_response(response.json())
-
-    # compare summary to existing topics
-    #    topic_id = compare_topics(topic_summary)
 
     summary_context = generate_current_topic_summary()
     MESSAGES.append(summary_context)

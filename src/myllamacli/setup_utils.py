@@ -3,7 +3,7 @@ import logging
 
 from typing import Dict, List
 
-from myllamacli.db_models import (
+from src.myllamacli.db_models import (
     Category,
     Chat,
     Context,

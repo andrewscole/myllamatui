@@ -16,8 +16,8 @@ from textual.widgets import (
     Static,
 )
 
-from myllamacli.import_export_files import parse_export_path, export_chat_as_file_ui
-from myllamacli.ui_widgets_messages import FileSelected, FilteredDirectoryTree
+from src.myllamacli.import_export_files import parse_export_path, export_chat_as_file_ui
+from src.myllamacli.ui_widgets_messages import FileSelected, FilteredDirectoryTree
 
 
 class FilePathScreen(Screen):
