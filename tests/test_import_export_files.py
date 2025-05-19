@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 
@@ -38,6 +37,8 @@ def mock_open_write():
     with patch('builtins.open', new_callable=MagicMock) as mock_open_write:
         yield mock_open_write
 
+def confirm_test_database():
+    assert llm_model._meta.database.database == ':memory:'
 
 # Open File
 def test_open_file_success(tmp_path):

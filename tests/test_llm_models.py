@@ -27,7 +27,10 @@ from src.myllamacli.llm_calls import (
 # Mock the database models
 from src.myllamacli.db_models import LLM_MODEL
 
-###### passing #######
+
+def confirm_test_database():
+    assert llm_model._meta.database.database == ':memory:'
+
 
 # Test parse_model_list
 def test_parse_model_list():

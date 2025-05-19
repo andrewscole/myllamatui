@@ -36,6 +36,7 @@ class Category:
     def select(cls):
         return [cls("Category 1"), cls("Category 2")]
 
+
 def test_create_context_dict():
     context_text = "Hello, world!"
     result = create_context_dict(context_text)

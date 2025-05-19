@@ -21,11 +21,9 @@ from textual.widgets import (
     Tree,
 )
 
-# from typing import Any, Touple, List
-
 from src.myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
 from src.myllamacli.init_files import set_database_path
-from src.myllamacli.setup_utils import setup_db_and_initialize_defaults
+from src.myllamacli.setup_utils import create_db, initialize_db_defaults
 from src.myllamacli.chats import (
     chat_with_llm_UI,
     create_and_apply_chat_topic_ui,
@@ -545,7 +543,9 @@ class OllamaTermApp(App):
     async def on_load(self) -> None:
         """First time Database and inits setup here"""
         if not os.path.exists(set_database_path()):
-            await setup_db_and_initialize_defaults()
+            create_db()
+            await initialize_db_defaults()
+
 
     def on_mount(self) -> None:
         """start up paramaters here"""

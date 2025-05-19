@@ -18,10 +18,15 @@ test_db = SqliteDatabase(':memory:')
 
 @pytest.fixture(scope="function")
 def test_database():
+    original_databases = {model: model._meta.database for model in TEST_MODELS}
+
     # Temporarily rebind the models to the test DB
     test_db.bind(TEST_MODELS, bind_refs=False, bind_backrefs=False)
     test_db.connect()
     test_db.create_tables(TEST_MODELS)
+
+    for model in TEST_MODELS:
+        model._meta.database = test_db
 
     # Swap out the original database on the base model
     #original_database = BaseModel._meta.database
@@ -31,7 +36,9 @@ def test_database():
 
     test_db.drop_tables(TEST_MODELS)
     test_db.close()
-    #BaseModel._meta.database = original_database
+    for model, original_db in original_databases.items():
+        model._meta.database = original_db
+
 
 
 # Mock the LLM_MODEL

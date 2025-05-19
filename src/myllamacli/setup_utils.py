@@ -24,12 +24,8 @@ CLI_DEFAULTS = {
 }
 
 
-async def setup_db_and_initialize_defaults() -> None:
+async def initialize_db_defaults() -> None:
     """setup db and add defaults"""
-
-    SQLITE_DB.connect()
-    SQLITE_DB.create_tables([Context, Category, Topic, Chat, LLM_MODEL, CLI_Settings])
-    SQLITE_DB.close()
 
     # generate some defaults
     contexts_list = [
@@ -64,6 +60,11 @@ async def setup_db_and_initialize_defaults() -> None:
         topic_id=CLI_DEFAULTS["topic_id"],
         llm_model_id=CLI_DEFAULTS["llm_model_id"],
     )
+
+def create_db(sqlite_database=SQLITE_DB) -> None:
+    sqlite_database.connect()
+    sqlite_database.create_tables([Context, Category, Topic, Chat, LLM_MODEL, CLI_Settings])
+    sqlite_database.close()
 
 def create_temp_fake_model() -> None:
     logging.info("No Models Found. Creating a fake model. Please pull a model.")
