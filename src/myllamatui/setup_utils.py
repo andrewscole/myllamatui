@@ -93,5 +93,3 @@ async def populate_llm_models() -> None:
                 )
     except:
         create_temp_fake_model()
-
-

@@ -9,7 +9,7 @@ from peewee import *
 
 from textual import on
 from textual.app import App, ComposeResult
-from textual.containers import Grid, VerticalScroll, Horizontal, Vertical
+from textual.containers import Grid, VerticalScroll
 from textual.widgets import (
     Button,
     Footer,
@@ -33,7 +33,8 @@ from src.myllamatui.chats import (
 from src.myllamatui.import_export_files import (
     open_files_and_add_to_question,
 )
-from src.myllamatui.ui_shared import model_choice_setup, context_choice_setup
+from src.myllamatui.llm_models import model_choice_setup
+from src.myllamatui.topics_contexts_categories import context_choice_setup
 from src.myllamatui.ui_widgets_messages import (
     QuestionAsk,
     FileSelected,
@@ -470,7 +471,6 @@ class OllamaTermApp(App):
         logging.info(message.url_changed)
         # messages have to be strings!
         if message.context_changed != "":
-            # self.query_one("#ContextDisplay_topbar").set_options(model_choice_setup())
             self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
 
         if message.topic_changed != "" or message.category_changed != "":

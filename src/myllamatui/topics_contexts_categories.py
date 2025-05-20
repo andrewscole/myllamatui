@@ -1,8 +1,8 @@
 import logging
 
-from typing import List, Dict, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
-from src.myllamatui.db_models import Topic, Category
+from src.myllamatui.db_models import Topic, Category, Context
 from src.myllamatui.prompts import (
     ADD_OR_APPLY_TOPIC_TO_CHAT,
     ASSESS_SUMMARY_1,
@@ -97,3 +97,24 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
         selected_match = potential_selection
 
     return selected_match
+
+# defs for returing items to ui sepcifically
+
+def context_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter((str(context.text), str(context.id)) for context in Context.select())
+
+
+def category_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter(
+        (str(category.text), str(category.id))
+        for category in Category.select()
+        if category.id > 1
+    )
+
+
+def topics_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter(
+        (str(topic.text), str(topic.id))
+        for topic in Topic.select()
+        if topic.text != "default"
+    )

@@ -1,7 +1,7 @@
 import logging
 import json
 
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from src.myllamatui.llm_calls import (
     generate_endpoint,
@@ -124,3 +124,12 @@ def align_db_and_ollama(raw_model_list: List, stored_llm_models: List) -> None:
             stored_model.currently_available = False
         stored_model.save()
     logging.debug("Update Complete.\n")
+
+
+# used for UI setup
+def model_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter(
+        (str(model.model), str(model.id))
+        for model in LLM_MODEL.select()
+        if model.currently_available == True
+    )

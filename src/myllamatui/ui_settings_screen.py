@@ -18,7 +18,7 @@ from textual.widgets import (
 )
 
 from src.myllamatui.db_models import LLM_MODEL, Chat, Category, Context, Topic, CLI_Settings
-from src.myllamatui.ui_shared import (
+from src.myllamatui.topics_contexts_categories import (
     context_choice_setup,
     topics_choice_setup,
     category_choice_setup,
