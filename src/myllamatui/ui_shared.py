@@ -1,10 +1,9 @@
 import logging
 from typing import Iterator, Tuple
 
-from src.myllamacli.db_models import Category, Context, Topic, LLM_MODEL
+from src.myllamatui.db_models import Category, Context, Topic, LLM_MODEL
 
 
-# helper defs to populate select boxes
 def model_choice_setup() -> Iterator[Tuple[str, str]]:
     return iter(
         (str(model.model), str(model.id))

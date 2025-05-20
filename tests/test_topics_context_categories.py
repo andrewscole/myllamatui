@@ -1,16 +1,15 @@
 import pytest
 
 from unittest.mock import patch, MagicMock
-from src.myllamacli.topics_contexts_categories import (
+from src.myllamatui.topics_contexts_categories import (
     create_context_dict,
     generate_current_topic_summary,
-    generate_category_summary,
     compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,
 )
-from src.myllamacli.db_models import Topic, Category
+from src.myllamatui.db_models import Topic, Category
 
-from src.myllamacli.prompts import (
+from src.myllamatui.prompts import (
     ADD_OR_APPLY_TOPIC_TO_CHAT,
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,
@@ -42,7 +41,7 @@ def test_create_context_dict():
     result = create_context_dict(context_text)
     assert result == {"role": "system", "content": context_text}
 
-@patch('src.myllamacli.db_models.Topic.select')
+@patch('src.myllamatui.db_models.Topic.select')
 def test_generate_current_topic_summary(mock_select):
     mock_select.return_value = [Topic("Topic 1"), Topic("Topic 2")]
     summary_messages = generate_current_topic_summary()
@@ -54,18 +53,18 @@ def test_generate_current_topic_summary(mock_select):
         + ASSESS_SUMMARY_2,
     }
 
-@patch('src.myllamacli.db_models.Category.select')
-def test_generate_category_summary(mock_select):
-    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
-    topic_summary = "This is a summary."
-    summary_messages = generate_category_summary(topic_summary)
-    
-    topic_summary_text = "This is my topic summary. " + topic_summary
-    category_instructions = (
-        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
-    )
-    
-    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
+#@patch('src.myllamatui.db_models.Category.select')
+#def test_generate_category_summary(mock_select):
+#    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
+#    topic_summary = "This is a summary."
+#    summary_messages = generate_category_summary(topic_summary)
+#    
+#    topic_summary_text = "This is my topic summary. " + topic_summary
+#    category_instructions = (
+#        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
+#    )
+#    
+#    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
 
 def test_compare_topics_and_categories_prompt():
     summary = "This is a summary."

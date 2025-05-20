@@ -3,14 +3,14 @@ import json
 
 from typing import Dict, List, Optional
 
-from src.myllamacli.llm_calls import (
+from src.myllamatui.llm_calls import (
     generate_endpoint,
     generate_data_for_model_pull,
     post_to_llm,
     get_from_llm,
     delete_llm_call,
 )
-from src.myllamacli.db_models import LLM_MODEL, Chat
+from src.myllamatui.db_models import LLM_MODEL, Chat
 
 
 # pulling and parsing return from Ollama

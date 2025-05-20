@@ -6,7 +6,7 @@ import httpx
 from unittest.mock import patch, AsyncMock
 
 # Import your functions from the module you want to test
-from src.myllamacli.llm_models import (
+from src.myllamatui.llm_models import (
     parse_model_list,
     get_raw_model_list,
     post_action_to_model_manager,
@@ -19,13 +19,13 @@ from src.myllamacli.llm_models import (
 )
 
 # Mock the functions from your dependencies
-from src.myllamacli.llm_calls import (
+from src.myllamatui.llm_calls import (
     generate_endpoint, 
     generate_data_for_model_pull,
 )
 
 # Mock the database models
-from src.myllamacli.db_models import LLM_MODEL
+from src.myllamatui.db_models import LLM_MODEL
 
 
 def confirm_test_database():

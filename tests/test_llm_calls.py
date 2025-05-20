@@ -2,7 +2,7 @@ import pytest
 import httpx
 from unittest.mock import patch, AsyncMock
 
-from src.myllamacli.llm_calls import (
+from src.myllamatui.llm_calls import (
     generate_endpoint,
     generate_data_for_chat,
     generate_data_for_model_pull,

@@ -1,6 +1,6 @@
 import pytest
 
-from src.myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
+from src.myllamatui.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
 
 def confirm_test_database():
     assert llm_model._meta.database.database == ':memory:'

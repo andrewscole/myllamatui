@@ -1,5 +1,5 @@
 [project]
-name = "myllamacli"
+name = "myllamatui"
 version = "0.0.1"
 description = "A terminal ui application that interfaces with ollama and allows you to chat with an LLM, store and acces chats and see some model information"
 readme = "README.md"
@@ -28,3 +28,6 @@ dev = [
     "pytest-cov", 
     "flake8"
 ]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"

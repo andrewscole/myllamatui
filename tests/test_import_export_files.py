@@ -7,9 +7,9 @@ from unittest import mock
 from unittest.mock import patch, mock_open, Mock, MagicMock
 from pathlib import Path
 
-from src.myllamacli.db_models import Chat, LLM_MODEL, Topic, Category, Context
-from src.myllamacli.ui_widgets_messages import SupportNotifyRequest
-from src.myllamacli.import_export_files import open_file, open_files_in_dir, open_files_and_add_to_question, check_file_type, parse_export_path, export_text_file, export_code_file, export_chat_as_file_ui
+from src.myllamatui.db_models import Chat, LLM_MODEL, Topic, Category, Context
+from src.myllamatui.ui_widgets_messages import SupportNotifyRequest
+from src.myllamatui.import_export_files import open_file, open_files_in_dir, open_files_and_add_to_question, check_file_type, parse_export_path, export_text_file, export_code_file, export_chat_as_file_ui
 
 
 MOCK_FILE_CONTENT = "File contents."
@@ -127,7 +127,7 @@ def test_open_files_in_dir_ignored_files(tmp_path):
 def test_open_files_and_add_to_question_with_file():
     # Use standard library's mock with patch
     with mock.patch("os.path.isdir", return_value=False) as mock_isdir:
-        with mock.patch("src.myllamacli.import_export_files.open_file", return_value="File content") as mock_open_file:
+        with mock.patch("src.myllamatui.import_export_files.open_file", return_value="File content") as mock_open_file:
             # Run the function
             result = open_files_and_add_to_question("Initial question", "path/to/file")
     
@@ -140,7 +140,7 @@ def test_open_files_and_add_to_question_with_file():
 def test_open_files_and_add_to_question_with_directory():
     # Use standard library's mock with patch
     with mock.patch("os.path.isdir", return_value=True) as mock_isdir:
-        with mock.patch("src.myllamacli.import_export_files.open_files_in_dir", return_value=["File 1", "File 2"]) as mock_open_files:
+        with mock.patch("src.myllamatui.import_export_files.open_files_in_dir", return_value=["File 1", "File 2"]) as mock_open_files:
             # Run the function
             result = open_files_and_add_to_question("Initial question", "path/to/dir")
     
@@ -229,10 +229,9 @@ def test_export_text_file(test_database, mock_open_write):
     """Test text file export"""
     result = create_test_chat("FakeModel", "answer text", "test topic", "question text", "answer text")
 
-    with mock.patch("src.myllamacli.import_export_files.open", mock_open_write()) as mocked_open:
+    with mock.patch("src.myllamatui.import_export_files.open", mock_open_write()) as mocked_open:
         export_text_file("test.txt", [result])
         mocked_open.assert_called_once_with("test.txt", "w")
-
 
 def test_export_code_file(test_database, mock_open_write):
 
@@ -256,6 +255,9 @@ def test_export_code_file(test_database, mock_open_write):
 
     result = create_test_chat("FakeModel", "my fake context", "test topic", "question text", answer_text)
 
-    with mock.patch("src.myllamacli.import_export_files.open", mock_open_write()) as mocked_open:
-        export_code_file("test", [result])
-        mocked_open.assert_called_once
+    with mock.patch("src.myllamatui.import_export_files.open", mock_open_write()) as mocked_open:
+        with mock.patch('src.myllamatui.import_export_files.os') as mock_dir_write:
+            export_code_file("test", [result])
+            mocked_open.assert_called_once
+            mock_dir_write.assert_called_once
+

@@ -5,8 +5,8 @@ import re
 from typing import List
 from pathlib import Path
 
-from src.myllamacli.db_models import LLM_MODEL, Chat
-from src.myllamacli.ui_widgets_messages import SupportNotifyRequest
+from src.myllamatui.db_models import LLM_MODEL, Chat
+from src.myllamatui.ui_widgets_messages import SupportNotifyRequest
 
 # video_extensions = [".mpeg", ".avi", ".wmv", ".mov", ".flv", "mp4", ".mpeg-4", ".mkv"]
 # audio_extenisions = [".aiff", ".mp3", ".wav", ".midi", ".aac", ".flac", ".m4A", ".wma", ".alac"]
