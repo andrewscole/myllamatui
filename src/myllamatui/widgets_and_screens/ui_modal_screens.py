@@ -7,6 +7,7 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.widgets import Label, Select
 
+
 # Modal screens
 class QuitScreen(ModalScreen):
     """Shows warning that I am qutting"""

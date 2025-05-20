@@ -17,7 +17,7 @@ from textual.widgets import (
 )
 
 from src.myllamatui.import_export_files import parse_export_path, export_chat_as_file_ui
-from src.myllamatui.ui_widgets_messages import FileSelected, FilteredDirectoryTree
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import FileSelected, FilteredDirectoryTree
 
 
 class FilePathScreen(Screen):

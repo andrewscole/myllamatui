@@ -30,8 +30,9 @@ def generate_current_topic_summary() -> List[Dict[str, str]]:
         + ASSESS_SUMMARY_2,
     }
 
+
 #### pulling out here and in tests. Currently unused. Not fully deleting yet.
-#def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
+# def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
 #    """generate message and add to list of messages for topic summary calls"""
 #
 #    # get topics list
@@ -73,7 +74,7 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
         not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that", "is"]
     ]
 
-    # loop through remaining words and find matches in existing topics. 
+    # loop through remaining words and find matches in existing topics.
     # create a dict withthe {topic_id:num of matches}
     match_dict = {}
     for i in range(len(summarywords)):
@@ -93,12 +94,14 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
         if match_dict[id] > highest:
             highest = match_dict[id]
             potential_selection = id
-    if highest / len(summarywords) > .5:
+    if highest / len(summarywords) > 0.5:
         selected_match = potential_selection
 
     return selected_match
 
+
 # defs for returing items to ui sepcifically
+
 
 def context_choice_setup() -> Iterator[Tuple[str, str]]:
     return iter((str(context.text), str(context.id)) for context in Context.select())

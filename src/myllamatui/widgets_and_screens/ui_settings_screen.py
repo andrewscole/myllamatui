@@ -17,7 +17,14 @@ from textual.widgets import (
     TabPane,
 )
 
-from src.myllamatui.db_models import LLM_MODEL, Chat, Category, Context, Topic, CLI_Settings
+from src.myllamatui.db_models import (
+    LLM_MODEL,
+    Chat,
+    Category,
+    Context,
+    Topic,
+    CLI_Settings,
+)
 from src.myllamatui.topics_contexts_categories import (
     context_choice_setup,
     topics_choice_setup,
@@ -31,8 +38,8 @@ from src.myllamatui.llm_models import (
     align_db_and_ollama,
     delete_llm_model,
 )
-from src.myllamatui.ui_widgets_messages import SettingsChanged
-from src.myllamatui.ui_modal_screens import QuitScreen
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import SettingsChanged
+from src.myllamatui.widgets_and_screens.ui_modal_screens import QuitScreen
 
 
 class SettingsScreen(Screen):

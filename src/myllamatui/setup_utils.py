@@ -13,7 +13,7 @@ from src.myllamatui.db_models import (
     SQLITE_DB,
 )
 from src.myllamatui.llm_models import get_raw_model_list, get_model_capabilities
-from src.myllamatui.ui_widgets_messages import SupportNotifyRequest
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import SupportNotifyRequest
 
 
 CLI_DEFAULTS = {
@@ -62,14 +62,17 @@ def initialize_db_defaults() -> None:
 
 def create_db(sqlite_database=SQLITE_DB) -> None:
     sqlite_database.connect()
-    sqlite_database.create_tables([Context, Category, Topic, Chat, LLM_MODEL, CLI_Settings], safe=True)
+    sqlite_database.create_tables(
+        [Context, Category, Topic, Chat, LLM_MODEL, CLI_Settings], safe=True
+    )
     sqlite_database.close()
 
 
 def create_temp_fake_model() -> None:
     logging.info("No Models Found. Creating a fake model. Please pull a model.")
     SupportNotifyRequest(
-        content=f"No Models Found. Creating a fake model. Please pull a model", severity="warning"
+        content=f"No Models Found. Creating a fake model. Please pull a model",
+        severity="warning",
     )
     LLM_MODEL.create(
         model="Temp_fake", specialization="general", size=0, currently_available=True

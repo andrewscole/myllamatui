@@ -6,7 +6,7 @@ from typing import List
 from pathlib import Path
 
 from src.myllamatui.db_models import LLM_MODEL, Chat
-from src.myllamatui.ui_widgets_messages import SupportNotifyRequest
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import SupportNotifyRequest
 
 # video_extensions = [".mpeg", ".avi", ".wmv", ".mov", ".flv", "mp4", ".mpeg-4", ".mkv"]
 # audio_extenisions = [".aiff", ".mp3", ".wav", ".midi", ".aac", ".flac", ".m4A", ".wma", ".alac"]
@@ -173,7 +173,7 @@ def export_code_file(export_path: str, chats: list[Chat]) -> None:
                             f"chat{i + 1}_file{file_count}{match_dict[language_match]}"
                         )
                         file_path = export_path + "/" + file_name
-                # write the "files that represent lines here by writing each individual line"
+                        # write the "files that represent lines here by writing each individual line"
                         logging.debug(f"writing to {file_path}")
                 with open(file_path, "w") as file:
                     for line in lines[1:-1]:

@@ -21,9 +21,20 @@ from textual.widgets import (
     Tree,
 )
 
-from src.myllamatui.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
+from src.myllamatui.db_models import (
+    Context,
+    Topic,
+    Category,
+    LLM_MODEL,
+    Chat,
+    CLI_Settings,
+)
 from src.myllamatui.init_files import set_database_path
-from src.myllamatui.setup_utils import create_db, populate_llm_models, initialize_db_defaults
+from src.myllamatui.setup_utils import (
+    create_db,
+    populate_llm_models,
+    initialize_db_defaults,
+)
 from src.myllamatui.chats import (
     chat_with_llm_UI,
     create_and_apply_chat_topic_ui,
@@ -35,15 +46,15 @@ from src.myllamatui.import_export_files import (
 )
 from src.myllamatui.llm_models import model_choice_setup
 from src.myllamatui.topics_contexts_categories import context_choice_setup
-from src.myllamatui.ui_widgets_messages import (
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import (
     QuestionAsk,
     FileSelected,
     SettingsChanged,
     SupportNotifyRequest,
 )
-from src.myllamatui.ui_file_screen import FilePathScreen
-from src.myllamatui.ui_settings_screen import SettingsScreen
-from src.myllamatui.ui_modal_screens import QuitScreen
+from src.myllamatui.widgets_and_screens.ui_file_screen import FilePathScreen
+from src.myllamatui.widgets_and_screens.ui_settings_screen import SettingsScreen
+from src.myllamatui.widgets_and_screens.ui_modal_screens import QuitScreen
 
 # CONSTANT PROMPTS
 from src.myllamatui.prompts import (
@@ -278,8 +289,12 @@ class OllamaTermApp(App):
             chatcontainer = self.query_one("#CurrentChat_MainChatWindow")
 
             self.add_wdg_to_scroll(
-                question, answer, model_name, None, str(chat_object_id.id), chatcontainer,
-
+                question,
+                answer,
+                model_name,
+                None,
+                str(chat_object_id.id),
+                chatcontainer,
             )
 
     #################################
@@ -328,7 +343,7 @@ class OllamaTermApp(App):
         # setup question
         input = self.query_one("#question_text")
         question = input.value
-        
+
         # clean up file path as the data will already be in messages
         model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
 
@@ -537,7 +552,6 @@ class OllamaTermApp(App):
             await populate_llm_models()
             initialize_db_defaults()
 
-
     def on_mount(self) -> None:
         """start up paramaters here"""
 
@@ -551,6 +565,7 @@ class OllamaTermApp(App):
         self.context_choice_id = context.id
         self.context_choice_text = str(context.text) + DO_NOT_MAKEUP
         self.update_tree()
+
 
 if __name__ == "__main__":
     app = OllamaTermApp()

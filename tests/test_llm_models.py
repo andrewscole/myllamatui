@@ -16,6 +16,7 @@ from src.myllamatui.llm_models import (
     get_model_capabilities,
     add_model_if_not_present,
     align_db_and_ollama,
+    model_choice_setup,
 )
 
 # Mock the functions from your dependencies
@@ -310,3 +311,16 @@ def test_align_db_and_ollama_no_drift(test_database):
     assert stored_llm_models[0].currently_available == True
     assert stored_llm_models[1].currently_available == True
     assert stored_llm_models[2].currently_available == True
+
+
+def test_model_choice_setup(test_database):
+    # Set up some sample data in the database
+    LLM_MODEL.create(id=1, model="model 1", specialization="general", size="1", currently_available=True)
+    LLM_MODEL.create(id=2, model="model 2", specialization="reasoning", size="2",currently_available=False)
+    LLM_MODEL.create(id=3, model="model 3", specialization="vision", size="3", currently_available=True)
+
+    # Test the function with a known input and expected output
+    result = list(model_choice_setup())
+    assert len(result) == 2
+    assert ("model 1", "1") in result
+    assert ("model 3", "3") in result

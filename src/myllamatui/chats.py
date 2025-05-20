@@ -7,7 +7,14 @@ import statistics
 from datetime import datetime
 from typing import List, Dict, Tuple
 
-from src.myllamatui.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
+from src.myllamatui.db_models import (
+    Chat,
+    Category,
+    Topic,
+    Context,
+    CLI_Settings,
+    LLM_MODEL,
+)
 from src.myllamatui.topics_contexts_categories import (
     compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,

@@ -8,7 +8,7 @@ from unittest.mock import patch, mock_open, Mock, MagicMock
 from pathlib import Path
 
 from src.myllamatui.db_models import Chat, LLM_MODEL, Topic, Category, Context
-from src.myllamatui.ui_widgets_messages import SupportNotifyRequest
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import SupportNotifyRequest
 from src.myllamatui.import_export_files import open_file, open_files_in_dir, open_files_and_add_to_question, check_file_type, parse_export_path, export_text_file, export_code_file, export_chat_as_file_ui
 
 
