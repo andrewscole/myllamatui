@@ -20,14 +20,27 @@ dependencies = [
     "mypy",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "black",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov", 
     "flake8"
 ]
+
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov"
+]
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+myllamatui = ["*.tcss"]
 
 [mypy]
 python-version = 3.13
