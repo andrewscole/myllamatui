@@ -101,8 +101,6 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
 
 
 # defs for returing items to ui sepcifically
-
-
 def context_choice_setup() -> Iterator[Tuple[str, str]]:
     return iter((str(context.text), str(context.id)) for context in Context.select())
 
