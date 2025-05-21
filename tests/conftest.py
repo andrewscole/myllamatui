@@ -8,7 +8,7 @@ from pathlib import Path
 
 from peewee import *
 
-from src.myllamacli.db_models import BaseModel, Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
+from src.myllamatui.db_models import BaseModel, Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
 
 # List all models you want to test
 TEST_MODELS = [Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings]
@@ -72,12 +72,12 @@ class MockChat:
 
 @pytest.fixture
 def mock_llm_model():
-    with patch('src.myllamacli.db_models.LLM_MODEL', new=MockLLMModel):
+    with patch('src.myllamatui.db_models.LLM_MODEL', new=MockLLMModel):
         yield
 
 @pytest.fixture
 def mock_topic():
-    with patch('src.myllamacli.db_models.Topic', new=MockTopic):
+    with patch('src.myllamatui.db_models.Topic', new=MockTopic):
         yield
 
 @pytest.fixture

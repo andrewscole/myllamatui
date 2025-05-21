@@ -4,13 +4,8 @@ from peewee import *
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll, Horizontal
-from textual.screen import Screen, ModalScreen
-from textual.widgets import Button, Label, Select
-
-
-from src.myllamacli.db_models import LLM_MODEL
-from src.myllamacli.ui_shared import model_choice_setup
+from textual.screen import ModalScreen
+from textual.widgets import Label, Select
 
 
 # Modal screens

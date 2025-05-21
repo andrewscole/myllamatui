@@ -1,9 +1,9 @@
 import logging
 
-from typing import List, Dict, Optional
+from typing import Dict, Iterator, List, Optional, Tuple
 
-from src.myllamacli.db_models import Topic, Category
-from src.myllamacli.prompts import (
+from src.myllamatui.db_models import Topic, Category, Context
+from src.myllamatui.prompts import (
     ADD_OR_APPLY_TOPIC_TO_CHAT,
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,
@@ -31,18 +31,19 @@ def generate_current_topic_summary() -> List[Dict[str, str]]:
     }
 
 
-def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
-    """generate message and add to list of messages for topic summary calls"""
-
-    # get topics list
-    category_list = [single_category.text for single_category in Category.select()]
-
-    topic_summary_text = "This is my topic summary. " + topic_summary
-    category_instructions = (
-        EXISTING_CATEGORY_TO_CHAT + f"{category_list}." + CREATE_NEW_CATEGORY
-    )
-
-    return {"role": "user", "content": topic_summary_text + category_instructions}
+#### pulling out here and in tests. Currently unused. Not fully deleting yet.
+# def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
+#    """generate message and add to list of messages for topic summary calls"""
+#
+#    # get topics list
+#    category_list = [single_category.text for single_category in Category.select()]
+#
+#    topic_summary_text = "This is my topic summary. " + topic_summary
+#    category_instructions = (
+#        EXISTING_CATEGORY_TO_CHAT + f"{category_list}." + CREATE_NEW_CATEGORY
+#    )
+#
+#    return {"role": "user", "content": topic_summary_text + category_instructions}
 
 
 def compare_topics_and_categories_prompt(
@@ -73,7 +74,7 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
         not in ["no", "yes", "a", "the", "then", "to", "if", "or", "this", "that", "is"]
     ]
 
-    # loop through remaining words and find matches in existing topics. 
+    # loop through remaining words and find matches in existing topics.
     # create a dict withthe {topic_id:num of matches}
     match_dict = {}
     for i in range(len(summarywords)):
@@ -93,7 +94,28 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
         if match_dict[id] > highest:
             highest = match_dict[id]
             potential_selection = id
-    if highest / len(summarywords) > .5:
+    if highest / len(summarywords) > 0.5:
         selected_match = potential_selection
 
     return selected_match
+
+
+# defs for returing items to ui sepcifically
+def context_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter((str(context.text), str(context.id)) for context in Context.select())
+
+
+def category_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter(
+        (str(category.text), str(category.id))
+        for category in Category.select()
+        if category.id > 1
+    )
+
+
+def topics_choice_setup() -> Iterator[Tuple[str, str]]:
+    return iter(
+        (str(topic.text), str(topic.id))
+        for topic in Topic.select()
+        if topic.text != "default"
+    )

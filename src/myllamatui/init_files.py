@@ -6,8 +6,8 @@ from pathlib import Path
 
 def set_database_path() -> str:
     home_dir = os.path.expanduser("~")
-    db_path = home_dir + "/.config/myllamacli"
-    db_name = "myllamacli.db"
+    db_path = home_dir + "/.config/myllamatui"
+    db_name = "myllamatui.db"
 
     MYLLAMACLI_DB = db_path + "/" + db_name
 

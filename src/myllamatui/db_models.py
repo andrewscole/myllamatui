@@ -2,7 +2,7 @@ from typing import List, Tuple
 from peewee import *
 from datetime import datetime
 
-from src.myllamacli.init_files import set_database_path
+from src.myllamatui.init_files import set_database_path
 
 MYLLAMACLI_DB = set_database_path()
 

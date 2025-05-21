@@ -1,16 +1,18 @@
 import pytest
 
 from unittest.mock import patch, MagicMock
-from src.myllamacli.topics_contexts_categories import (
+from src.myllamatui.topics_contexts_categories import (
     create_context_dict,
     generate_current_topic_summary,
-    generate_category_summary,
     compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,
+    category_choice_setup,
+    context_choice_setup,
+    topics_choice_setup,
 )
-from src.myllamacli.db_models import Topic, Category
+from src.myllamatui.db_models import Topic, Category, Context
 
-from src.myllamacli.prompts import (
+from src.myllamatui.prompts import (
     ADD_OR_APPLY_TOPIC_TO_CHAT,
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,
@@ -20,7 +22,7 @@ from src.myllamacli.prompts import (
 )
 
 # Mocking database models
-class Topic:
+class MockTopic:
     def __init__(self, text):
         self.text = text
 
@@ -28,13 +30,21 @@ class Topic:
     def select(cls):
         return [cls("Topic 1"), cls("Topic 2")]
 
-class Category:
+class MockCategory:
     def __init__(self, text):
         self.text = text
 
     @classmethod
     def select(cls):
         return [cls("Category 1"), cls("Category 2")]
+    
+class MockContext:
+    def __init__(self, text):
+        self.text = text
+
+    @classmethod
+    def select(cls):
+        return [cls("Context 1"), cls("Context 2")]
 
 
 def test_create_context_dict():
@@ -42,9 +52,9 @@ def test_create_context_dict():
     result = create_context_dict(context_text)
     assert result == {"role": "system", "content": context_text}
 
-@patch('src.myllamacli.db_models.Topic.select')
+@patch('src.myllamatui.db_models.Topic.select')
 def test_generate_current_topic_summary(mock_select):
-    mock_select.return_value = [Topic("Topic 1"), Topic("Topic 2")]
+    mock_select.return_value = [MockTopic("Topic 1"), MockTopic("Topic 2")]
     summary_messages = generate_current_topic_summary()
 
     assert summary_messages == {"role": "user",
@@ -54,18 +64,18 @@ def test_generate_current_topic_summary(mock_select):
         + ASSESS_SUMMARY_2,
     }
 
-@patch('src.myllamacli.db_models.Category.select')
-def test_generate_category_summary(mock_select):
-    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
-    topic_summary = "This is a summary."
-    summary_messages = generate_category_summary(topic_summary)
-    
-    topic_summary_text = "This is my topic summary. " + topic_summary
-    category_instructions = (
-        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
-    )
-    
-    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
+#@patch('src.myllamatui.db_models.Category.select')
+#def test_generate_category_summary(mock_select):
+#    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
+#    topic_summary = "This is a summary."
+#    summary_messages = generate_category_summary(topic_summary)
+#    
+#    topic_summary_text = "This is my topic summary. " + topic_summary
+#    category_instructions = (
+#        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
+#    )
+#    
+#    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
 
 def test_compare_topics_and_categories_prompt():
     summary = "This is a summary."
@@ -105,3 +115,45 @@ def test_check_for_topic_and_category_match(summary, matchid):
     match = check_for_topic_and_category_match(summary, [topic1, topic2])
 
     assert match == matchid
+
+
+@patch('src.myllamatui.db_models.Context.select')
+def test_category_choice_setup(context_data):
+    mock_contexts = [
+        MagicMock(text='default', id=1),
+        MagicMock(text='Category 2', id=2),
+        MagicMock(text='Category 3', id=3),
+    ]
+
+    with patch.object(Topic, 'select', return_value=mock_contexts):
+        result = list(topics_choice_setup())
+
+    expected = [('Category 2', '2'), ('Category 3', '3')]
+    assert result == expected
+
+
+def test_topic_choice_setup():
+    mock_contexts = [
+        MagicMock(text='default', id=1),
+        MagicMock(text='Topic 2', id=2),
+        MagicMock(text='Topic 3', id=3),
+    ]
+
+    with patch.object(Topic, 'select', return_value=mock_contexts):
+        result = list(topics_choice_setup())
+
+    expected = [('Topic 2', '2'), ('Topic 3', '3')]
+    assert result == expected
+
+def test_context_choice_setup():
+    mock_contexts = [
+        MagicMock(text='context 1', id=1),
+        MagicMock(text='context 2', id=2),
+        MagicMock(text='context 3', id=3),
+    ]
+
+    with patch.object(Context, 'select', return_value=mock_contexts):
+        result = list(context_choice_setup())
+
+    expected = [('context 1', '1'), ('context 2', '2'), ('context 3', '3')]
+    assert result == expected

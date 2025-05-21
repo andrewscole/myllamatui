@@ -9,7 +9,7 @@ from peewee import *
 
 from textual import on
 from textual.app import App, ComposeResult
-from textual.containers import Grid, VerticalScroll, Horizontal, Vertical
+from textual.containers import Grid, VerticalScroll
 from textual.widgets import (
     Button,
     Footer,
@@ -21,32 +21,43 @@ from textual.widgets import (
     Tree,
 )
 
-from src.myllamacli.db_models import Context, Topic, Category, LLM_MODEL, Chat, CLI_Settings
-from src.myllamacli.init_files import set_database_path
-from src.myllamacli.setup_utils import create_db, initialize_db_defaults
-from src.myllamacli.chats import (
+from src.myllamatui.db_models import (
+    Context,
+    Topic,
+    Category,
+    LLM_MODEL,
+    Chat,
+    CLI_Settings,
+)
+from src.myllamatui.init_files import set_database_path
+from src.myllamatui.setup_utils import (
+    create_db,
+    populate_llm_models,
+    initialize_db_defaults,
+)
+from src.myllamatui.chats import (
     chat_with_llm_UI,
     create_and_apply_chat_topic_ui,
     resume_previous_chats_ui,
     save_chat,
 )
-from src.myllamacli.import_export_files import (
+from src.myllamatui.import_export_files import (
     open_files_and_add_to_question,
-    check_file_type,
 )
-from src.myllamacli.ui_shared import model_choice_setup, context_choice_setup
-from src.myllamacli.ui_widgets_messages import (
+from src.myllamatui.llm_models import model_choice_setup
+from src.myllamatui.topics_contexts_categories import context_choice_setup
+from src.myllamatui.widgets_and_screens.ui_widgets_messages import (
     QuestionAsk,
     FileSelected,
     SettingsChanged,
     SupportNotifyRequest,
 )
-from src.myllamacli.ui_file_screen import FilePathScreen
-from src.myllamacli.ui_settings_screen import SettingsScreen
-from src.myllamacli.ui_modal_screens import QuitScreen
+from src.myllamatui.widgets_and_screens.ui_file_screen import FilePathScreen
+from src.myllamatui.widgets_and_screens.ui_settings_screen import SettingsScreen
+from src.myllamatui.widgets_and_screens.ui_modal_screens import QuitScreen
 
 # CONSTANT PROMPTS
-from src.myllamacli.prompts import (
+from src.myllamatui.prompts import (
     DO_NOT_MAKEUP,
     EVALUATION_QUESTION,
     EVALUTATE_CONTEXT,
@@ -278,8 +289,12 @@ class OllamaTermApp(App):
             chatcontainer = self.query_one("#CurrentChat_MainChatWindow")
 
             self.add_wdg_to_scroll(
-                question, answer, model_name, None, str(chat_object_id.id), chatcontainer,
-
+                question,
+                answer,
+                model_name,
+                None,
+                str(chat_object_id.id),
+                chatcontainer,
             )
 
     #################################
@@ -328,7 +343,7 @@ class OllamaTermApp(App):
         # setup question
         input = self.query_one("#question_text")
         question = input.value
-        
+
         # clean up file path as the data will already be in messages
         model_list = [llm_model.model for llm_model in LLM_MODEL.select()]
 
@@ -337,15 +352,6 @@ class OllamaTermApp(App):
         input.loading = True
 
         logging.debug("saving chats")
-
-        # so this causes a issue that I think is probably async render related, defaulting to loading first.
-
-        #querying_note = f"Querying {self.model_choice_name}. This could take a while, particularly when using models over 10b. Time out is set to 15 min."
-        #if str(self.followup_model_choice_name) in model_list:
-        #    f"Querying {self.model_choice_name} and evaluating with {self.followup_model_choice_name} This will take a while. Time out is set to 15 min per call."
-        #self.push_screen(
-        #    QuitScreen(querying_note)
-        #)
 
         # call LLM
         logging.debug("questions: {}".format(question))
@@ -480,7 +486,6 @@ class OllamaTermApp(App):
         logging.info(message.url_changed)
         # messages have to be strings!
         if message.context_changed != "":
-            # self.query_one("#ContextDisplay_topbar").set_options(model_choice_setup())
             self.query_one("#ContextDisplay_topbar").set_options(context_choice_setup())
 
         if message.topic_changed != "" or message.category_changed != "":
@@ -544,8 +549,8 @@ class OllamaTermApp(App):
         """First time Database and inits setup here"""
         if not os.path.exists(set_database_path()):
             create_db()
-            await initialize_db_defaults()
-
+            await populate_llm_models()
+            initialize_db_defaults()
 
     def on_mount(self) -> None:
         """start up paramaters here"""

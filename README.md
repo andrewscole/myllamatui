@@ -1,4 +1,4 @@
-# myllamacli
+# myllamatui
 A simple terminal ui  to interact with a local llm and store your chat history locally with no calls to the outside world (unless you want to add them)
 
 This is very much in progress.
