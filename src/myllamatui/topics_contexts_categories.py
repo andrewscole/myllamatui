@@ -8,8 +8,8 @@ from src.myllamatui.prompts import (
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,
     ASSESS_SUMMARY_3,
-    EXISTING_CATEGORY_TO_CHAT,
     CREATE_NEW_CATEGORY,
+    CATEGORY_ASSESS
 )
 
 
@@ -27,38 +27,38 @@ def generate_current_topic_summary() -> List[Dict[str, str]]:
         "content": ADD_OR_APPLY_TOPIC_TO_CHAT
         + ASSESS_SUMMARY_2
         + f"{topic_list}"
-        + ASSESS_SUMMARY_2,
+        + ASSESS_SUMMARY_3,
     }
 
 
-#### pulling out here and in tests. Currently unused. Not fully deleting yet.
-# def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
-#    """generate message and add to list of messages for topic summary calls"""
-#
-#    # get topics list
-#    category_list = [single_category.text for single_category in Category.select()]
-#
-#    topic_summary_text = "This is my topic summary. " + topic_summary
-#    category_instructions = (
-#        EXISTING_CATEGORY_TO_CHAT + f"{category_list}." + CREATE_NEW_CATEGORY
-#    )
-#
-#    return {"role": "user", "content": topic_summary_text + category_instructions}
+def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
+    """generate message and add to list of messages for topic summary calls"""
 
+    # get topics list
+    category_list = [str(single_category.text) for single_category in Category.select()]
 
-def compare_topics_and_categories_prompt(
-    summary: str, item_list: list
-) -> Optional[int]:
-    """compare llm generated summary to existing summaries and return mach id or None"""
-    item_text_list = [item.text for item in item_list]
-    compliation_prompt = (
-        ASSESS_SUMMARY_1
-        + summary
-        + ASSESS_SUMMARY_2
-        + f"{item_list}."
-        + ASSESS_SUMMARY_3
+    topic_summary_text = "This is my topic: " + topic_summary
+    category_instructions = (
+        CREATE_NEW_CATEGORY + "If the similarity between your summary " + ASSESS_SUMMARY_2 + f"{category_list}" + CATEGORY_ASSESS
+
     )
-    return {"role": "user", "content": compliation_prompt}
+
+    return {"role": "user", "content": topic_summary_text + category_instructions + " Do not explain, only output 1 to 2 word category description."}
+
+
+#def compare_topics_and_categories_prompt(
+#    summary: str, item_list: list
+#) -> Optional[int]:
+#    """compare llm generated summary to existing summaries and return mach id or None"""
+#    item_text_list = [item.text for item in item_list]
+#    compliation_prompt = (
+#        ASSESS_SUMMARY_1
+#        + summary
+#        + ASSESS_SUMMARY_2
+#        + f"{item_list}."
+#        + ASSESS_SUMMARY_3
+#    )
+#    return {"role": "user", "content": compliation_prompt}
 
 
 def check_for_topic_and_category_match(summary: str, items: list) -> Optional[int]:

@@ -18,13 +18,11 @@ ADD_OR_APPLY_TOPIC_TO_CHAT = f"Create a concise topic description about the curr
 ASSESS_SUMMARY_1 = "If the similarity between the summary here: "
 # apply to both Topic and Cetegory
 ASSESS_SUMMARY_2 = "and one of the items in the list here: "
-ASSESS_SUMMARY_3 = "is 60% or higher, output only the item in the topic list, otherwise output the summary you just created."
+ASSESS_SUMMARY_3 = "is 50% or higher, output only the item in the list, otherwise output the summary you just created."
 
 # creaate a category
-EXISTING_CATEGORY_TO_CHAT = "Can the topic summary be logically filed under an existing category from this list of categories? "
-CREATE_NEW_CATEGORY = (
-    "If it can, output the name of appropiate category. If it cannot not. Create a concise category name of no more than 2 words generally describing the summary."
-    "If this is a programming langage only return the language name."
-)
+CREATE_NEW_CATEGORY = "Create a new generalized category of no more than 2 words describing the topic. If this is a programming langage only return the language name. \
+    This should be concise like a bullet point in presentiation. Do not include any symobls."
+CATEGORY_ASSESS = "is 25% or higher, output only the item in the list, otherwise output the summary you just created."
 # contexts
 EVALUTATE_CONTEXT = "You are a helpful professional, evaluating for accuracy and editing a response if necessary."

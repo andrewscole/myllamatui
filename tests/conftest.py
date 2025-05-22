@@ -69,6 +69,32 @@ class MockChat:
     def update_chat_topic_from_summary(topic_id):
         return MockChat(topic_id, "1")
 
+class MockContext:
+    def __init__(self, text):
+        self.text = text
+
+    @classmethod
+    def select(cls):
+        return [cls("Context 1"), cls("Context 2")]
+
+
+class MockTopic:
+    def __init__(self, text):
+        self.text = text
+
+    @classmethod
+    def select(cls):
+        return [cls("Topic 1"), cls("Topic 2")]
+
+
+class MockCategory:
+    def __init__(self, text):
+        self.text = text
+
+    @classmethod
+    def select(cls):
+        return [cls("Category 1"), cls("Category 2")]
+
 
 @pytest.fixture
 def mock_llm_model():
@@ -81,6 +107,16 @@ def mock_topic():
         yield
 
 @pytest.fixture
+def mock_context():
+    with patch('src.myllamatui.db_models.Context', new=MockContext):
+        yield
+
+@pytest.fixture
+def mock_chat():
+    with patch('src.myllamatui.db_models.Chat', new=MockChat):
+        yield
+
+@pytest.fixture
 def mock_path():
     with patch('pathlib.Path') as mock_path:
         yield mock_path
@@ -90,7 +126,6 @@ def mock_logging():
     with patch('logging.info') as mock_logging:
         with patch('logging.debug') as mock_logging_debug:
             yield mock_logging, mock_logging_debug
-
 
 @pytest.fixture
 def mock_get():

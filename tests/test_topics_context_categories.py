@@ -4,7 +4,6 @@ from unittest.mock import patch, MagicMock
 from src.myllamatui.topics_contexts_categories import (
     create_context_dict,
     generate_current_topic_summary,
-    compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,
     category_choice_setup,
     context_choice_setup,
@@ -17,8 +16,8 @@ from src.myllamatui.prompts import (
     ASSESS_SUMMARY_1,
     ASSESS_SUMMARY_2,
     ASSESS_SUMMARY_3,
-    EXISTING_CATEGORY_TO_CHAT,
     CREATE_NEW_CATEGORY,
+    CATEGORY_ASSESS
 )
 
 # Mocking database models
@@ -64,20 +63,21 @@ def test_generate_current_topic_summary(mock_select):
         + ASSESS_SUMMARY_2,
     }
 
-#@patch('src.myllamatui.db_models.Category.select')
-#def test_generate_category_summary(mock_select):
-#    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
-#    topic_summary = "This is a summary."
-#    summary_messages = generate_category_summary(topic_summary)
-#    
-#    topic_summary_text = "This is my topic summary. " + topic_summary
-#    category_instructions = (
-#        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
-#    )
-#    
-#    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
+@patch('src.myllamatui.db_models.Category.select')
+def test_generate_category_summary(mock_select):
+    mock_select.return_value = [Category("Category 1"), Category("Category 2")]
+    topic_summary = "This is a summary."
+    summary_messages = generate_category_summary(topic_summary)
+    
+    topic_summary_text = "This is my topic summary. " + topic_summary
+    category_instructions = (
+        EXISTING_CATEGORY_TO_CHAT + f"{["Category 1", "Category 2"]}." + CREATE_NEW_CATEGORY
+    )
+    
+    assert summary_messages == {"role": "user", "content": topic_summary_text + category_instructions}
 
-def test_compare_topics_and_categories_prompt():
+
+def test_generate_category_summary():
     summary = "This is a summary."
     topic_list = [Topic("Item 1"), Topic("Item 2")]
     result = compare_topics_and_categories_prompt(summary, topic_list)
