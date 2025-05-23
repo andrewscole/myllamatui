@@ -105,15 +105,15 @@ def test_generate_category_summary(mock_category):
     "summary, matchid",
     [
         ("Existing Topic 1", 1),
-        ("New Topic", None),
+        ("New Summary", None),
         ("Existing Topic 2", 2),
         ("No Match", None),
         (
             "Existing Topic 3",
             1,
         ),  # note this will default to first match since precent is the same
-        ("Existing Topic number 3", None),  # precent too low
-        ("No Existing Match", None),  # precent too low
+        ("New Topic number 3", None),  # precent too low
+        ("No Existing summary to Match", None),  # precent too low
     ],
 )
 def test_check_for_topic_and_category_match(summary, matchid):

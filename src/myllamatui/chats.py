@@ -116,15 +116,23 @@ async def create_and_apply_chat_topic_ui(
 
     if topic_id is None:
         # You have created a new topic, now evaluate the category for this new topic anc create if needed
-        category_summary = await generate_topic_catgory(url, topic_summary, model_name)        
-        # check for a match
-        category_id_num = check_for_topic_and_category_match(
-            category_summary, Category.select()
-        )
-        # if no match, create new
-        if category_id_num is None:
-            category_id_num = Category.create(text=category_summary)
-        # create new topic with new or exiting category id
+        
+        # fist check topic summary to see if it obviously fits into a category
+        category_id_num = check_for_topic_and_category_match(topic_summary, Category.select())
+        
+        # if not generate a category
+        if category_id_num is None:        
+            category_summary = await generate_topic_catgory(url, topic_summary, model_name)    
+            
+            # check for a match again for good measure
+            category_id_num = check_for_topic_and_category_match(
+                category_summary, Category.select()
+            )
+            # if no match, create new category
+            if category_id_num is None:
+                category_id_num = Category.create(text=category_summary)
+        
+        # finally create new topic with new or exiting category id
         topic_id = Topic.create(text=topic_summary, category_id=category_id_num)
 
     return topic_id

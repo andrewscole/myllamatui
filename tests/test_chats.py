@@ -183,13 +183,12 @@ async def test_generate_topic_category(mock_post):
     mock_post.assert_called_once()
 
 
-#### failing ####
 # test topic match
 @pytest.mark.asyncio
 def test_create_and_apply_chat_topic_ui_topic_match(mock_post):
     assert 1 == 2
 
-
+#### failing ####
 # new topic and old Category
 def test_create_and_apply_chat_topic_ui_new_topic_old_cat(mock_post):
     assert 1 == 2

@@ -88,15 +88,13 @@ def check_for_topic_and_category_match(summary: str, items: list) -> Optional[in
                     match_dict[match] = 1
 
     # find the highest match in the dict from above
-    # if above 60% of the essential words match an exisiting topic, use it
+    # if above 40% of the essential words match an exisiting topic, use it
     highest = 0
     for id in match_dict.keys():
         if match_dict[id] > highest:
             highest = match_dict[id]
-            potential_selection = id
-    if highest / len(summarywords) > 0.5:
-        selected_match = potential_selection
-
+            if highest / len(summarywords) > 0.4:
+                selected_match = id
     return selected_match
 
 
