@@ -73,7 +73,7 @@ logging.basicConfig(
 )
 
 
-class OllamaTermApp(App):
+class MyLlamaTUI(App):
     """A Textual app to manage ollama chats and models."""
 
     CSS_PATH = "css_grid_setup.tcss"
@@ -520,7 +520,6 @@ class OllamaTermApp(App):
         unparsed_chats = Chat.select().where(Chat.topic_id == 1)
         topic_id = await create_and_apply_chat_topic_ui(
             self.url,
-            self.chat_object_list,
             self.LLM_MESSAGES,
             self.model_choice_name,
         )
@@ -565,8 +564,3 @@ class OllamaTermApp(App):
         self.context_choice_id = context.id
         self.context_choice_text = str(context.text) + DO_NOT_MAKEUP
         self.update_tree()
-
-
-if __name__ == "__main__":
-    app = OllamaTermApp()
-    app.run()

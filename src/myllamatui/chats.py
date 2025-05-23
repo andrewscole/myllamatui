@@ -5,7 +5,7 @@ import re
 import statistics
 
 from datetime import datetime
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 from src.myllamatui.db_models import (
     Chat,
@@ -16,10 +16,10 @@ from src.myllamatui.db_models import (
     LLM_MODEL,
 )
 from src.myllamatui.topics_contexts_categories import (
-    compare_topics_and_categories_prompt,
     check_for_topic_and_category_match,
     create_context_dict,
     generate_current_topic_summary,
+    generate_category_summary,
 )
 from src.myllamatui.llm_calls import (
     generate_endpoint,
@@ -81,34 +81,58 @@ async def create_content_summary(url: str, MESSAGES: list, model_name: str) -> s
     return topic_summary
 
 
-async def create_and_apply_chat_topic_ui(
-    url: str, chat_object_list: List, MESSAGES: List, model_name: str
-) -> None:
-    """Generate and update topic for the current chats"""
-
+async def generate_chat_topic(url: str, MESSAGES: List, model_name: str) -> str:
     summary_context = generate_current_topic_summary()
     MESSAGES.append(summary_context)
 
     # generate a topic summary
     topic_summary_raw = await create_content_summary(url, MESSAGES, model_name)
+    # strip away any extra characters
     topic_summary = re.sub(r"[^a-zA-Z0-9\s]", "", topic_summary_raw)
-    topic_id = check_for_topic_and_category_match(topic_summary, Topic.select())
+    return topic_summary
 
-    if topic_id is None:
-        # You have created a new topic, now evaluate the category for this new topic anc create if needed
+
+async def generate_topic_catgory(url: str, topic_summary: str, model_name: str) -> str:
         category_and_topic_summary_context = create_context_dict(
             "You are a publishing editor who creates tables of contents"
         )
-        prompt = compare_topics_and_categories_prompt(topic_summary, Category.select())
+        prompt = generate_category_summary(topic_summary)
         category_summary = await create_content_summary(
             url, [category_and_topic_summary_context, prompt], model_name
         )
-        category_id_num = check_for_topic_and_category_match(
-            category_summary, Category.select()
-        )
-        if category_id_num is None:
-            category_id_num = Category.create(text=category_summary)
-        # create new topic with new or exiting category id
+        return category_summary
+
+
+async def create_and_apply_chat_topic_ui(
+    url: str, MESSAGES: List, model_name: str
+) -> None:
+    """Generate and update topic for the current chats"""
+
+    # create summary
+    topic_summary = await generate_chat_topic(url, MESSAGES, model_name)
+    # check against exisitng topics
+    topic_id = check_for_topic_and_category_match(topic_summary, Topic.select())
+
+
+    if topic_id is None:
+        # You have created a new topic, now evaluate the category for this new topic anc create if needed
+        
+        # fist check topic summary to see if it obviously fits into a category
+        category_id_num = check_for_topic_and_category_match(topic_summary, Category.select())
+        
+        # if not generate a category
+        if category_id_num is None:        
+            category_summary = await generate_topic_catgory(url, topic_summary, model_name)    
+            
+            # check for a match again for good measure
+            category_id_num = check_for_topic_and_category_match(
+                category_summary, Category.select()
+            )
+            # if no match, create new category
+            if category_id_num is None:
+                category_id_num = Category.create(text=category_summary)
+        
+        # finally create new topic with new or exiting category id
         topic_id = Topic.create(text=topic_summary, category_id=category_id_num)
 
     return topic_id

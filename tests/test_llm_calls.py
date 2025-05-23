@@ -13,6 +13,7 @@ from src.myllamatui.llm_calls import (
     delete_llm_call,
 )
 
+
 # Mocking httpx responses
 class MockResponse:
     def __init__(self, status_code, json):
@@ -26,7 +27,9 @@ class MockResponse:
 @pytest.mark.asyncio
 async def test_post_to_llm(mock_post):
     # Arrange
-    mock_post.return_value = httpx.Response(status_code=200, json={"message": "Success"})
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"message": "Success"}
+    )
 
     api_endpoint = "https://example.com/api/post"
     data = {"key": "value"}
@@ -81,6 +84,7 @@ def test_generate_endpoint():
     endpoint = generate_endpoint(url, action)
     assert endpoint == "http://example.com/api/tags"
 
+
 def test_generate_data_for_chat():
     MESSAGES = [{"role": "user", "content": "Hello"}]
     model = "gpt-3.5-turbo"
@@ -91,30 +95,28 @@ def test_generate_data_for_chat():
         "messages": [{"role": "user", "content": "Hello"}],
     }
 
+
 def test_generate_data_for_model_pull():
     model = "gpt-3.5-turbo"
     data = generate_data_for_model_pull(model)
     assert data == {"model": "gpt-3.5-turbo"}
+
 
 def test_generate_input_dict():
     input_text = "Hello, world!"
     data = generate_input_dict(input_text)
     assert data == {"role": "user", "content": "Hello, world!"}
 
+
 def test_parse_response_message():
-    response_json = {
-        "message": {
-            "content": "This is a message"
-        }
-    }
+    response_json = {"message": {"content": "This is a message"}}
     key, answer = parse_response(response_json)
     assert key == "message"
     assert answer == "This is a message"
 
+
 def test_parse_response_response():
-    response_json = {
-        "response": "This is a response"
-    }
+    response_json = {"response": "This is a response"}
     key, answer = parse_response(response_json)
     assert key == "response"
     assert answer == "This is a response"

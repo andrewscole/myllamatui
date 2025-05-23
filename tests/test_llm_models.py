@@ -21,7 +21,7 @@ from src.myllamatui.llm_models import (
 
 # Mock the functions from your dependencies
 from src.myllamatui.llm_calls import (
-    generate_endpoint, 
+    generate_endpoint,
     generate_data_for_model_pull,
 )
 
@@ -30,19 +30,15 @@ from src.myllamatui.db_models import LLM_MODEL
 
 
 def confirm_test_database():
-    assert llm_model._meta.database.database == ':memory:'
+    assert llm_model._meta.database.database == ":memory:"
 
 
 # Test parse_model_list
 def test_parse_model_list():
-    raw_model_list = {
-        "models": [
-            {"name": "model1"},
-            {"name": "model2"}
-        ]
-    }
+    raw_model_list = {"models": [{"name": "model1"}, {"name": "model2"}]}
     expected_output = ["model1", "model2"]
     assert parse_model_list(raw_model_list) == expected_output
+
 
 # Test parse_model_name_for_skill
 def test_parse_model_name_for_skill():
@@ -51,6 +47,7 @@ def test_parse_model_name_for_skill():
 
     result = parse_model_name_for_skill(model_name)
     assert result == expected_output
+
 
 # Test get_model_capabilities
 @pytest.mark.asyncio
@@ -67,8 +64,8 @@ async def test_get_model_capabilities_in_name():
     "mock_skill,mock_result",
     [
         ("tools", "general"),
-        ("general", "general"), 
-        ("completion", "general"), 
+        ("general", "general"),
+        ("completion", "general"),
         ("insert", "general"),
         ("vision", "vision"),
         ("reasoning", "reasoning"),
@@ -79,9 +76,12 @@ async def test_get_model_capabilities_not_in_name(mock_post, mock_skill, mock_re
     url = "http://example.com"
     model_name = "model1"
 
-    mock_post.return_value = httpx.Response(status_code=200, json={"capabilities": [mock_skill]})
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"capabilities": [mock_skill]}
+    )
     result = await get_model_capabilities(url, model_name)
     assert result == mock_result
+
 
 # Test get_raw_model_list
 @pytest.mark.asyncio
@@ -89,8 +89,6 @@ async def test_get_raw_model_list(mock_get):
     url = "http://example.com"
     raw_model_list = {"models": [{"name": "model1"}, {"name": "model2"}]}
     apiendpoint = generate_endpoint(url, "show_list")
-
-
 
     mock_get.return_value = httpx.Response(status_code=200, json=raw_model_list)
     result = await get_raw_model_list(url)
@@ -105,10 +103,9 @@ async def test_post_action_to_model_manager(mock_post):
     action = "pull"
     expected_output = "pull_text"
 
-    
     apiendpoint = generate_endpoint(url, action)
     data = generate_data_for_model_pull(model)
-    
+
     mock_post.return_value = httpx.Response(status_code=200, text=expected_output)
     result = await post_action_to_model_manager(url, model, action)
     print(result)
@@ -126,20 +123,24 @@ async def test_delete_llm_model(mock_delete):
     apiendpoint = generate_endpoint(url, "delete")
     data = generate_data_for_model_pull(model)
 
-
     mock_delete.return_value = httpx.Response(status_code=200, text=expected_output)
 
     result = await delete_llm_model(url, model)
     assert result.text == expected_output
-    mock_delete.assert_called_once_with(method='DELETE', url='http://example.com/api/delete', json={'model': 'model1'}, timeout=300.0)
+    mock_delete.assert_called_once_with(
+        method="DELETE",
+        url="http://example.com/api/delete",
+        json={"model": "model1"},
+        timeout=300.0,
+    )
 
 
 @pytest.mark.parametrize(
     "mock_skill,mock_result",
     [
         ("tools", "general"),
-        ("general", "general"), 
-        ("completion", "general"), 
+        ("general", "general"),
+        ("completion", "general"),
         ("insert", "general"),
         ("vision", "vision"),
         ("reasoning", "reasoning"),
@@ -150,12 +151,13 @@ async def test_pull_and_parse_model_capabilities(mock_post, mock_skill, mock_res
     url = "http://example.com"
     model_name = "model1"
     action = "model_info"
-    
+
     apiendpoint = generate_endpoint(url, action)
     data = generate_data_for_model_pull(model_name)
-    
 
-    mock_post.return_value = httpx.Response(status_code=200, json={"capabilities": [mock_skill]})
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"capabilities": [mock_skill]}
+    )
 
     result = await pull_and_parse_model_capabilities(url, model_name)
     assert result == mock_result
@@ -167,8 +169,7 @@ def test_add_model_if_not_present_new_model(test_database):
     ollama_list = {
         "models": [
             {"model": "model1", "size": 1, "specialization": "general"},
-            {"model": "model2", "size": 2, "specialization": "vision"}
-
+            {"model": "model2", "size": 2, "specialization": "vision"},
         ]
     }
 
@@ -180,7 +181,9 @@ def test_add_model_if_not_present_new_model(test_database):
             currently_available=True,
         )
 
-    ollama_list["models"].append({"model": "model3", "size": 3, "specialization": "general"})
+    ollama_list["models"].append(
+        {"model": "model3", "size": 3, "specialization": "general"}
+    )
     # add models
     ollama_names = []
     for model in ollama_list["models"]:
@@ -194,7 +197,6 @@ def test_add_model_if_not_present_new_model(test_database):
 
     assert ollama_names != stored_names
 
-
     add_model_if_not_present(ollama_list, stored_llm_models)
 
     stored_llm_models = LLM_MODEL.select()
@@ -202,9 +204,8 @@ def test_add_model_if_not_present_new_model(test_database):
     stored_names = []
     for model in stored_llm_models:
         stored_names.append(model.model)
-    
-    assert ollama_names == stored_names
 
+    assert ollama_names == stored_names
 
 
 # Test add_model_if_not_present
@@ -212,8 +213,7 @@ def test_add_model_no_change_no_new_model(test_database):
     ollama_list = {
         "models": [
             {"model": "model1", "size": 1, "specialization": "general"},
-            {"model": "model2", "size": 2, "specialization": "vision"}
-
+            {"model": "model2", "size": 2, "specialization": "vision"},
         ]
     }
 
@@ -238,7 +238,6 @@ def test_add_model_no_change_no_new_model(test_database):
 
     assert ollama_names == stored_names
 
-
     add_model_if_not_present(ollama_list, stored_llm_models)
 
     stored_llm_models = LLM_MODEL.select()
@@ -246,12 +245,11 @@ def test_add_model_no_change_no_new_model(test_database):
     stored_names = []
     for model in stored_llm_models:
         stored_names.append(model.model)
-    
+
     assert ollama_names == stored_names
 
-
-
     # Add your assertions here to check if new models are added correctly
+
 
 # Test align_db_and_ollama
 def test_align_db_and_ollama_with_drift(test_database):
@@ -259,8 +257,7 @@ def test_align_db_and_ollama_with_drift(test_database):
         "models": [
             {"name": "model1", "size": 1, "specialization": "general"},
             {"name": "model2", "size": 2, "specialization": "vision"},
-            {"name": "model3", "size": 3, "specialization": "vision"}
-
+            {"name": "model3", "size": 3, "specialization": "vision"},
         ]
     }
 
@@ -284,13 +281,13 @@ def test_align_db_and_ollama_with_drift(test_database):
     assert stored_llm_models[1].currently_available == True
     assert stored_llm_models[2].currently_available == False
 
+
 def test_align_db_and_ollama_no_drift(test_database):
     raw_model_list = {
         "models": [
             {"name": "model1", "size": 1, "specialization": "general"},
             {"name": "model2", "size": 2, "specialization": "vision"},
-            {"name": "model3", "size": 3, "specialization": "vision"}
-
+            {"name": "model3", "size": 3, "specialization": "vision"},
         ]
     }
 
@@ -315,9 +312,27 @@ def test_align_db_and_ollama_no_drift(test_database):
 
 def test_model_choice_setup(test_database):
     # Set up some sample data in the database
-    LLM_MODEL.create(id=1, model="model 1", specialization="general", size="1", currently_available=True)
-    LLM_MODEL.create(id=2, model="model 2", specialization="reasoning", size="2",currently_available=False)
-    LLM_MODEL.create(id=3, model="model 3", specialization="vision", size="3", currently_available=True)
+    LLM_MODEL.create(
+        id=1,
+        model="model 1",
+        specialization="general",
+        size="1",
+        currently_available=True,
+    )
+    LLM_MODEL.create(
+        id=2,
+        model="model 2",
+        specialization="reasoning",
+        size="2",
+        currently_available=False,
+    )
+    LLM_MODEL.create(
+        id=3,
+        model="model 3",
+        specialization="vision",
+        size="3",
+        currently_available=True,
+    )
 
     # Test the function with a known input and expected output
     result = list(model_choice_setup())
