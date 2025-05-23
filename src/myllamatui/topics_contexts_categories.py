@@ -39,11 +39,11 @@ def generate_category_summary(topic_summary) -> List[Dict[str, str]]:
 
     topic_summary_text = "This is my topic: " + topic_summary
     category_instructions = (
-        CREATE_NEW_CATEGORY + "If the similarity between your summary " + ASSESS_SUMMARY_2 + f"{category_list}" + CATEGORY_ASSESS
+        CREATE_NEW_CATEGORY + "If the similarity between your summary " + ASSESS_SUMMARY_2 + f"{category_list}" + CATEGORY_ASSESS + " Do not explain, only output 1 to 2 word category description."
 
     )
 
-    return {"role": "user", "content": topic_summary_text + category_instructions + " Do not explain, only output 1 to 2 word category description."}
+    return {"role": "user", "content": topic_summary_text + category_instructions}
 
 
 #def compare_topics_and_categories_prompt(

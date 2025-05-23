@@ -6,7 +6,14 @@ from unittest.mock import Mock, patch
 
 
 # Import necessary modules from your application
-from src.myllamatui.db_models import Chat, Category, Topic, Context, CLI_Settings, LLM_MODEL
+from src.myllamatui.db_models import (
+    Chat,
+    Category,
+    Topic,
+    Context,
+    CLI_Settings,
+    LLM_MODEL,
+)
 from src.myllamatui.topics_contexts_categories import (
     check_for_topic_and_category_match,
     create_context_dict,
@@ -19,7 +26,15 @@ from src.myllamatui.llm_calls import (
     post_to_llm,
     parse_response,
 )
-from src.myllamatui.chats import save_chat, chat_with_llm_UI, create_content_summary, create_and_apply_chat_topic_ui, resume_previous_chats_ui, generate_topic_catgory, generate_chat_topic
+from src.myllamatui.chats import (
+    save_chat,
+    chat_with_llm_UI,
+    create_content_summary,
+    create_and_apply_chat_topic_ui,
+    resume_previous_chats_ui,
+    generate_topic_catgory,
+    generate_chat_topic,
+)
 
 
 #### passing ####
@@ -29,19 +44,18 @@ def test_save_chat(test_database):
     context_id = "1"
     topic_id = "1"
     model_id = "1"
-    
+
     # Call the function
     chat_id = save_chat(question, answer, context_id, topic_id, model_id)
     this_chat = Chat.get_by_id(chat_id)
     assert this_chat.question == "test_question"
     assert this_chat.answer == "test_answer"
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "returned_answer, messages_answer",[
-    ({"message": {"content": "42"}}, {"content": "42"}),
-    ({"response":"42"}, "42")
-    ]
+    "returned_answer, messages_answer",
+    [({"message": {"content": "42"}}, {"content": "42"}), ({"response": "42"}, "42")],
 )
 async def test_chat_with_llm_UI(mock_post, returned_answer, messages_answer):
 
@@ -55,39 +69,79 @@ async def test_chat_with_llm_UI(mock_post, returned_answer, messages_answer):
     mock_post.return_value = httpx.Response(status_code=200, json=returned_answer)
 
     # Call the function
-    answer, updated_messages = await chat_with_llm_UI(url, question, context_text, MESSAGES, model_name)
+    answer, updated_messages = await chat_with_llm_UI(
+        url, question, context_text, MESSAGES, model_name
+    )
 
     mock_post.assert_called_once()
     assert answer == "42"
-    assert updated_messages == [{'role': 'system', 'content': 'A long context text.'}, {'role': 'user', 'content': 'What is the meaning of life?'}, messages_answer]
+    assert updated_messages == [
+        {"role": "system", "content": "A long context text."},
+        {"role": "user", "content": "What is the meaning of life?"},
+        messages_answer,
+    ]
+
 
 @pytest.mark.asyncio
 async def test_create_content_summary(mock_post):
     url = "http://fakeexmple.nope"
-    MESSAGES = [{'role': 'system', 'content': 'A long context text.'}, {'role': 'user', 'content': 'What is the meaning of life?'}, "42"]
+    MESSAGES = [
+        {"role": "system", "content": "A long context text."},
+        {"role": "user", "content": "What is the meaning of life?"},
+        "42",
+    ]
     model_name = "gpt-3"
 
     # Mocking response from post_to_llm
-    mock_post.return_value = httpx.Response(status_code=200, json={"response": "topic_summary"})
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"response": "topic_summary"}
+    )
     topic_summary = await create_content_summary(url, MESSAGES, model_name)
 
     # Assertions
     assert topic_summary == "topic_summary"
     mock_post.assert_called_once()
 
-@pytest.mark.parametrize(
-    "t_id_1, c_id_1, t_id_2, c_id_2, t_id_3, c_id_3, topic_id_result, context_text", [
-    (2, 1, 2, 1, 3, 2, "2", "friendly and helpful"),
-    (3, 2, 3, 2, 3, 2, "3", "senior developer"),
-    (1, 1, 2, 1, 3, 2, "1", "friendly and helpful"),
-    ]
-)
-def test_resume_previous_chats_ui(mock_chat, mock_context, t_id_1, c_id_1, t_id_2, c_id_2, t_id_3, c_id_3, topic_id_result, context_text):
-    selected_chats = [
-        Chat(question="What is your name?", answer="John Doe", context_id=c_id_1, topic_id=t_id_1),
-        Chat(question="Where are you from?", answer="New York", context_id=c_id_2, topic_id=t_id_2),
-        Chat(question="How many chucks can a wood chuck chuck?", answer="12", context_id=c_id_3, topic_id=t_id_3),
 
+@pytest.mark.parametrize(
+    "t_id_1, c_id_1, t_id_2, c_id_2, t_id_3, c_id_3, topic_id_result, context_text",
+    [
+        (2, 1, 2, 1, 3, 2, "2", "friendly and helpful"),
+        (3, 2, 3, 2, 3, 2, "3", "senior developer"),
+        (1, 1, 2, 1, 3, 2, "1", "friendly and helpful"),
+    ],
+)
+def test_resume_previous_chats_ui(
+    mock_chat,
+    mock_context,
+    t_id_1,
+    c_id_1,
+    t_id_2,
+    c_id_2,
+    t_id_3,
+    c_id_3,
+    topic_id_result,
+    context_text,
+):
+    selected_chats = [
+        Chat(
+            question="What is your name?",
+            answer="John Doe",
+            context_id=c_id_1,
+            topic_id=t_id_1,
+        ),
+        Chat(
+            question="Where are you from?",
+            answer="New York",
+            context_id=c_id_2,
+            topic_id=t_id_2,
+        ),
+        Chat(
+            question="How many chucks can a wood chuck chuck?",
+            answer="12",
+            context_id=c_id_3,
+            topic_id=t_id_3,
+        ),
     ]
 
     # Call the function
@@ -107,12 +161,13 @@ async def test_generate_chat_topic(mock_post):
     model_name = "fakegpt"
     MESSAGES = ["Tell me a Joke about Godzilla!", "RAWRR I AM GODZILLA!"]
 
-    mock_post.return_value = httpx.Response(status_code=200, json={"response": "Gozilla Jokes!"})
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"response": "Gozilla Jokes!"}
+    )
     topic_summary = await generate_chat_topic(url, MESSAGES, model_name)
 
     assert topic_summary == "Gozilla Jokes"
     mock_post.assert_called_once()
-
 
 
 @pytest.mark.asyncio
@@ -127,18 +182,19 @@ async def test_generate_topic_category(mock_post):
     assert category_summary == "Jokes"
     mock_post.assert_called_once()
 
+
 #### failing ####
 # test topic match
 @pytest.mark.asyncio
 def test_create_and_apply_chat_topic_ui_topic_match(mock_post):
-    pass
+    assert 1 == 2
 
 
 # new topic and old Category
 def test_create_and_apply_chat_topic_ui_new_topic_old_cat(mock_post):
-    pass
+    assert 1 == 2
 
 
 # new topic and new Category
 def test_create_and_apply_chat_topic_ui_new_topic_new_cat(mock_post):
-    pass
+    assert 1 == 2
