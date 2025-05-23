@@ -2,7 +2,7 @@ import pytest
 import asyncio
 import httpx
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 
 # Import necessary modules from your application
@@ -35,6 +35,28 @@ from src.myllamatui.chats import (
     generate_topic_catgory,
     generate_chat_topic,
 )
+
+class MockTopic:
+    def __init__(self, text, id):
+        self.text = text
+        self.id = id
+
+    @classmethod
+    def select(cls):
+        return [cls("Topic 1", "1"), cls("Topic 2", "2"), cls("Topic 3", "3")]
+
+    @classmethod
+    def create(cls):
+        return cls("Topic 1", "1")
+
+class MockCategory:
+    def __init__(self, text, id):
+        self.text = text
+        self.id = id
+
+    @classmethod
+    def select(cls):
+        return [cls("Category 1", "1"), cls("Category 2", "2"), cls("Category 3", "3")]
 
 
 #### passing ####
@@ -146,8 +168,6 @@ def test_resume_previous_chats_ui(
 
     # Call the function
     MESSAGES, topic_id = resume_previous_chats_ui(selected_chats)
-    print(MESSAGES)
-    print(topic_id)
 
     # Assertions
     assert len(MESSAGES) == 7  # Three questions and answers plus context_dict
@@ -185,15 +205,73 @@ async def test_generate_topic_category(mock_post):
 
 # test topic match
 @pytest.mark.asyncio
-def test_create_and_apply_chat_topic_ui_topic_match(mock_post):
-    assert 1 == 2
+@patch("src.myllamatui.db_models.Topic.select")
+async def test_create_and_apply_chat_topic_ui_topic_match(mock_select, mock_post):
+    url = "http://fakeexmple.nope"
+    model_name = "fakegpt"
+    messages = ["Funny Jokes"]
+    mock_post.return_value = httpx.Response(status_code=200, json={"response": "Dad Jokes"})
+    mock_select.return_value = [MockTopic(text="default", id=1), MockTopic(text="Dad Jokes", id=2), MockTopic(text="Godzilla Jokes", id=3)]
+    topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
 
+    assert topic_id == 2
+    mock_post.assert_called_once()
+    assert mock_select.call_count == 2
 #### failing ####
 # new topic and old Category
-def test_create_and_apply_chat_topic_ui_new_topic_old_cat(mock_post):
-    assert 1 == 2
+@pytest.mark.asyncio
+async def test_create_and_apply_chat_topic_ui_new_topic_cat_match_name(mock_post, test_database):
+    url = "http://fakeexmple.nope"
+    model_name = "fakegpt"
+    messages = ["Funny Jokes"]
+    Category.create(text="default")
+    Category.create(text="Jokes")
+    Category.create(text="Python")
+    Topic.create(text="default", category_id="1")
+    Topic.create(text="Textual Testing", category_id="2")
+
+    mock_post.side_effect = [httpx.Response(status_code=200, json={"response": "Elephant Funny"}),httpx.Response(status_code=200, json={"response": "Jokes"}) ]    
+    topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
+    assert topic_id.id == 3
+    assert mock_post.call_count == 2
 
 
 # new topic and new Category
-def test_create_and_apply_chat_topic_ui_new_topic_new_cat(mock_post):
-    assert 1 == 2
+@pytest.mark.asyncio
+async def test_create_and_apply_chat_topic_ui_new_topic_new_cat(mock_post, test_database):
+    url = "http://fakeexmple.nope"
+    model_name = "fakegpt"
+    messages = ["Elephants have large Trunks"]
+
+    Category.create(text="default")
+    Category.create(text="Jokes")
+    Category.create(text="Python")
+
+    Topic.create(text="default", category_id="1")
+    Topic.create(text="Textual Testing", category_id="2")
+    Topic.create(text="Ruby Testing", category_id="3")
+
+    first_category_list = Category.select()
+    len_first_cat_list = len(first_category_list)
+
+    first_topic_list = Topic.select()
+    len_first_topic_list = len(first_topic_list)
+
+
+    len(first_topic_list)
+
+    mock_post.side_effect = [httpx.Response(status_code=200, json={"response": "Elephant Trunks"}), httpx.Response(status_code=200, json={"response": "Elephants"})]    
+
+    topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
+    assert topic_id.id == 4
+    assert str(topic_id.category_id) == str(4)
+    assert mock_post.call_count == 2
+
+    second_category_list = Category.select()
+    len_second_cat_list = len(second_category_list)
+
+    second_topic_list = Topic.select()
+    len_second_top_list = len(second_topic_list)
+
+    assert len_first_cat_list < len_second_cat_list
+    assert len_first_topic_list < len_second_top_list

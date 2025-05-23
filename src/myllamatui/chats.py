@@ -104,7 +104,7 @@ async def generate_topic_catgory(url: str, topic_summary: str, model_name: str) 
 
 
 async def create_and_apply_chat_topic_ui(
-    url: str, chat_object_list: List, MESSAGES: List, model_name: str
+    url: str, MESSAGES: List, model_name: str
 ) -> None:
     """Generate and update topic for the current chats"""
 

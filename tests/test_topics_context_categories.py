@@ -143,13 +143,13 @@ def test_category_choice_setup():
 
 
 def test_topic_choice_setup():
-    mock_contexts = [
+    mock_topics = [
         MagicMock(text="default", id=1),
         MagicMock(text="Topic 2", id=2),
         MagicMock(text="Topic 3", id=3),
     ]
 
-    with patch.object(Topic, "select", return_value=mock_contexts):
+    with patch.object(Topic, "select", return_value=mock_topics):
         result = list(topics_choice_setup())
 
     expected = [("Topic 2", "2"), ("Topic 3", "3")]
