@@ -102,6 +102,7 @@ def mock_llm_model():
     with patch("src.myllamatui.db_models.LLM_MODEL", new=MockLLMModel):
         yield
 
+
 @pytest.fixture
 def mock_topic():
     with patch("src.myllamatui.db_models.Topic", new=MockTopic):

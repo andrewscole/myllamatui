@@ -36,6 +36,7 @@ from src.myllamatui.chats import (
     generate_chat_topic,
 )
 
+
 class MockTopic:
     def __init__(self, text, id):
         self.text = text
@@ -48,6 +49,7 @@ class MockTopic:
     @classmethod
     def create(cls):
         return cls("Topic 1", "1")
+
 
 class MockCategory:
     def __init__(self, text, id):
@@ -210,17 +212,27 @@ async def test_create_and_apply_chat_topic_ui_topic_match(mock_select, mock_post
     url = "http://fakeexmple.nope"
     model_name = "fakegpt"
     messages = ["Funny Jokes"]
-    mock_post.return_value = httpx.Response(status_code=200, json={"response": "Dad Jokes"})
-    mock_select.return_value = [MockTopic(text="default", id=1), MockTopic(text="Dad Jokes", id=2), MockTopic(text="Godzilla Jokes", id=3)]
+    mock_post.return_value = httpx.Response(
+        status_code=200, json={"response": "Dad Jokes"}
+    )
+    mock_select.return_value = [
+        MockTopic(text="default", id=1),
+        MockTopic(text="Dad Jokes", id=2),
+        MockTopic(text="Godzilla Jokes", id=3),
+    ]
     topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
 
     assert topic_id == 2
     mock_post.assert_called_once()
     assert mock_select.call_count == 2
+
+
 #### failing ####
 # new topic and old Category
 @pytest.mark.asyncio
-async def test_create_and_apply_chat_topic_ui_new_topic_cat_match_name(mock_post, test_database):
+async def test_create_and_apply_chat_topic_ui_new_topic_cat_match_name(
+    mock_post, test_database
+):
     url = "http://fakeexmple.nope"
     model_name = "fakegpt"
     messages = ["Funny Jokes"]
@@ -230,7 +242,10 @@ async def test_create_and_apply_chat_topic_ui_new_topic_cat_match_name(mock_post
     Topic.create(text="default", category_id="1")
     Topic.create(text="Textual Testing", category_id="2")
 
-    mock_post.side_effect = [httpx.Response(status_code=200, json={"response": "Elephant Funny"}),httpx.Response(status_code=200, json={"response": "Jokes"}) ]    
+    mock_post.side_effect = [
+        httpx.Response(status_code=200, json={"response": "Elephant Funny"}),
+        httpx.Response(status_code=200, json={"response": "Jokes"}),
+    ]
     topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
     assert topic_id.id == 3
     assert mock_post.call_count == 2
@@ -238,7 +253,9 @@ async def test_create_and_apply_chat_topic_ui_new_topic_cat_match_name(mock_post
 
 # new topic and new Category
 @pytest.mark.asyncio
-async def test_create_and_apply_chat_topic_ui_new_topic_new_cat(mock_post, test_database):
+async def test_create_and_apply_chat_topic_ui_new_topic_new_cat(
+    mock_post, test_database
+):
     url = "http://fakeexmple.nope"
     model_name = "fakegpt"
     messages = ["Elephants have large Trunks"]
@@ -257,10 +274,12 @@ async def test_create_and_apply_chat_topic_ui_new_topic_new_cat(mock_post, test_
     first_topic_list = Topic.select()
     len_first_topic_list = len(first_topic_list)
 
-
     len(first_topic_list)
 
-    mock_post.side_effect = [httpx.Response(status_code=200, json={"response": "Elephant Trunks"}), httpx.Response(status_code=200, json={"response": "Elephants"})]    
+    mock_post.side_effect = [
+        httpx.Response(status_code=200, json={"response": "Elephant Trunks"}),
+        httpx.Response(status_code=200, json={"response": "Elephants"}),
+    ]
 
     topic_id = await create_and_apply_chat_topic_ui(url, messages, model_name)
     assert topic_id.id == 4

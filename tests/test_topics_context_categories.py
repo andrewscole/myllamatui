@@ -31,6 +31,7 @@ class MockTopic:
     def select(cls):
         return [cls("Topic 1"), cls("Topic 2")]
 
+
 class MockContext:
     def __init__(self, text):
         self.text = text
